@@ -7,23 +7,32 @@ type: public
 encoding: UTF-8
 followredirect: true
 links:
-  - https://torrentqq232.com/
+  - https://torrentqq344.com/
+  - https://torrentegg36.com/
 legacylinks:
-  - https://torrentqq217.com/
-  - https://torrentqq218.com/
-  - https://torrentqq219.com/
-  - https://torrentqq220.com/
-  - https://torrentqq221.com/
-  - https://torrentqq222.com/
-  - https://torrentqq223.com/
-  - https://torrentqq224.com/
-  - https://torrentqq225.com/
-  - https://torrentqq226.com/
-  - https://torrentqq227.com/
-  - https://torrentqq228.com/
-  - https://torrentqq229.com/
-  - https://torrentqq230.com/
-  - https://torrentqq231.com/
+  - https://torrentqq329.com/
+  - https://torrentqq330.com/
+  - https://torrentqq331.com/
+  - https://torrentqq332.com/
+  - https://torrentqq333.com/
+  - https://torrentqq334.com/
+  - https://torrentqq335.com/
+  - https://torrentqq336.com/
+  - https://torrentegg28.com/
+  - https://torrentqq337.com/
+  - https://torrentegg29.com/
+  - https://torrentqq338.com/
+  - https://torrentegg30.com/
+  - https://torrentqq339.com/
+  - https://torrentegg31.com/
+  - https://torrentqq340.com/
+  - https://torrentegg32.com/
+  - https://torrentegg33.com/
+  - https://torrentqq341.com/
+  - https://torrentqq342.com/
+  - https://torrentegg34.com/
+  - https://torrentqq343.com/
+  - https://torrentegg35.com/
 
 caps:
   categorymappings:
@@ -42,13 +51,10 @@ caps:
     tv-search: [q, season, ep]
     movie-search: [q]
     music-search: [q]
-    book-search: [q]
 
 settings:
-  - name: flaresolverr
-    type: info
-    label: FlareSolverr
-    default: This site may use Cloudflare DDoS Protection, therefore Jackett requires <a href="https://github.com/Jackett/Jackett#configuring-flaresolverr" target="_blank">FlareSolverr</a> to access it.
+  - name: info_flaresolverr
+    type: info_flaresolverr
 
 download:
   infohash:
@@ -94,13 +100,13 @@ search:
       optional: true
       filters:
         - name: dateparse
-          args: "01-02"
+          args: "MM-dd"
     date_time:
       selector: div.wr-date:contains(":")
       optional: true
       filters:
         - name: dateparse
-          args: "15:04"
+          args: "HH:mm"
     date:
       text: "{{ if or .Result.date_time .Result.date_day }}{{ or .Result.date_time .Result.date_day }}{{ else }}now{{ end }}"
     size:

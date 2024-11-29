@@ -5,15 +5,19 @@ description: "zetorrents is a FRENCH Public site for MOVIES / TV / GENERAL"
 language: fr-FR
 type: public
 encoding: UTF-8
-# to fetch current domain use https://www.protege-liens.com/zetorrents
+# to fetch current domain use https://www.protege-torrent.com/Zetorrents
 links:
-  - https://www.zetorrents.biz/
-  - https://zetorrents.nocensor.lol/
+  - https://www.zetorrents.sk/
 legacylinks:
-  - https://www.zetorrents.co/
-  - https://www.zetorrents.io/
-  - https://wvw.zetorrents.io/
-  - https://vww.zetorrents.io/
+  - https://www.protege-liens.com/
+  - https://www.protege-liens.net/
+  # latest domains list
+  - https://www.protege-torrent.com/
+  - https://www.site-torrent.com/
+  - https://www.rantop.org/
+  - https://www.torrent.ws/
+  - https://www.torrent.onl/
+  # actual legacylinks
   - https://wwv.zetorrents.io/
   - https://ww1.zetorrents.io/
   - https://www.zetorrents.org/
@@ -22,7 +26,15 @@ legacylinks:
   - https://www.zetorrents.tv/
   - https://www.zetorrents.bz/
   - https://www.zetorrents.nl/
-  - https://zetorrents.nocensor.world/
+  - https://www.zetorrents.biz/
+  - https://www.zetorrents.ch/
+  - https://zetorrents.mrunblock.bond/
+  - https://zetorrents.nocensor.cloud/
+  - https://www.zetorrents.pw/
+  - https://www.zetorrents.tw/
+  - https://www.zetorrents.in/
+  - https://www.zetorrents.vg/
+  - https://www.zetorrents.vc/
 
 caps:
   categories:
@@ -32,38 +44,35 @@ caps:
     search: [q]
     tv-search: [q, season, ep]
     movie-search: [q]
+  allowrawsearch: true
 
 settings:
-  - name: info_8000
-    type: info
-    label: About zetorrents Categories
-    default: zetorrents does not return categories in its search results.</br>To add to your Apps' Torznab indexer, replace all categories with 8000(Other).
+  - name: info_category_8000
+    type: info_category_8000
   - name: multilang
     type: checkbox
-    label: Replace MULTI by another language in release name
+    label: Replace MULTi by another language in release name
     default: false
   - name: multilanguage
     type: select
-    label: Replace MULTI by this language
+    label: Replace MULTi by this language
     default: FRENCH
     options:
       FRENCH: FRENCH
-      MULTI.FRENCH: MULTI.FRENCH
+      MULTi FRENCH: MULTi FRENCH
       ENGLISH: ENGLISH
-      MULTI.ENGLISH: MULTI.ENGLISH
+      MULTi ENGLISH: MULTi ENGLISH
       VOSTFR: VOSTFR
-      MULTI.VOSTFR: MULTI.VOSTFR
+      MULTi VOSTFR: MULTi VOSTFR
   - name: vostfr
     type: checkbox
-    label: Replace VOSTFR with ENGLISH
+    label: Replace VOSTFR and SUBFRENCH with ENGLISH
     default: false
 
 download:
   selectors:
-    - selector: script:contains("magnet:?")
-      filters:
-        - name: regexp
-          args: "\\s'(magnet:\\?.+?)';"
+    - selector: a[href^="magnet:?"]
+      attribute: href
 
 search:
   paths:
@@ -76,60 +85,37 @@ search:
       args: ["(?i)(S)(\\d{1,3})$", "saison $2"]
 
   rows:
-    selector: table.table > tbody > tr:has(a[href^="/torrent/"])
+    selector: table.table > tbody > tr:has(a[href^="/detail/"])
 
   fields:
     category:
       text: Other
-    _site_date:
-      selector: a[href^="/torrent/"]
-      filters:
-        # year is at the end of the title, so we get it and name it _site_date
-        - name: regexp
-          args: "(19|20\\d{2})$"
     title_phase1:
-      selector: a[href^="/torrent/"]
-      attribute: title
+      selector: a[href^="/detail/"]
       filters:
-        - name: replace
-          args: [" en Torrent", ""]
         - name: replace
           args: ["WEBRIP", "WEBDL"]
-        # now we put the date at the right place according scene naming rules using .Result._site_date
         - name: re_replace
-          args: ["(?i)( FRENCH)", " {{ .Result._site_date }} FRENCH"]
-        - name: re_replace
-          args: ["(?i)( MULTI)", " {{ .Result._site_date }} MULTI"]
-        - name: re_replace
-          args: ["(?i)( TRUEFRENCH)", " {{ .Result._site_date }} TRUEFRENCH"]
-        - name: re_replace
-          args: ["(?i)( VOSTFR)", " {{ .Result._site_date }} VOSTFR"]
-        - name: re_replace
-          args: ["(?i)( SUBFRENCH)", " {{ .Result._site_date }} SUBFRENCH"]
-        # and we delete it at the end
-        - name: re_replace
-          args: ["(19|20\\d{2})$", ""]
-    title_multilang:
+          args: ["(?i)\\b(FRENCH|MULTI|TRUEFRENCH|VOSTFR|SUBFRENCH)\\b(.+?)(\\b(19|20\\d{2})\\b)$", "$3 $1$2"]
+    title_vostfr:
       text: "{{ .Result.title_phase1 }}"
       filters:
         - name: re_replace
-          args: ["(?i)(\\smulti\\s)", " {{ .Config.multilanguage }} "]
+          args: ["(?i)\\b(vostfr|subfrench)\\b", "ENGLISH"]
     title_phase2:
-      text: "{{ if .Config.multilang }}{{ .Result.title_multilang }}{{ else }}{{ .Result.title_phase1 }}{{ end }}"
-    title_vostfr:
+      text: "{{ if .Config.vostfr }}{{ .Result.title_vostfr }}{{ else }}{{ .Result.title_phase1 }}{{ end }}"
+    title_multilang:
       text: "{{ .Result.title_phase2 }}"
       filters:
         - name: re_replace
-          args: ["(?i)(\\svostfr\\s)", " ENGLISH "]
-        - name: re_replace
-          args: ["(?i)(\\ssubfrench\\s)", " ENGLISH "]
+          args: ["(?i)\\b(MULTI(?!.*(?:FRENCH|ENGLISH|VOSTFR)))\\b", "{{ .Config.multilanguage }}"]
     title:
-      text: "{{ if .Config.vostfr }}{{ .Result.title_vostfr }}{{ else }}{{ .Result.title_phase2 }}{{ end }}"
+      text: "{{ if .Config.multilang }}{{ .Result.title_multilang }}{{ else }}{{ .Result.title_phase2 }}{{ end }}"
     details:
-      selector: a[href^="/torrent/"]
+      selector: a[href^="/detail/"]
       attribute: href
     download:
-      selector: a[href^="/torrent/"]
+      selector: a[href^="/detail/"]
       attribute: href
     date:
       text: now

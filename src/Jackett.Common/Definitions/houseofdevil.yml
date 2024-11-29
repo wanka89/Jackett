@@ -29,7 +29,7 @@ caps:
     - {id: 127, cat: Movies, desc: "Fuer Unsere Kleinsten"}
     - {id: 121, cat: PC/Mobile-Other, desc: "Handy-Stuff"}
     - {id: 124, cat: Audio, desc: "Musik - Alben"}
-    - {id: 140, cat: Audio, desc: "Musik - Diskografie"}
+    - {id: 141, cat: Audio, desc: "Musik - Diskografie"}
     - {id: 122, cat: Audio/Audiobook, desc: "Musik - Hoerbuch"}
     - {id: 123, cat: Audio, desc: "Musik - Mixe"}
     - {id: 133, cat: Audio/MP3, desc: "Musik - MP3"}
@@ -39,6 +39,7 @@ caps:
     - {id: 115, cat: PC/0day, desc: "Programme - Windows"}
     - {id: 116, cat: TV/Documentary, desc: "Serien - Dokus"}
     - {id: 118, cat: TV/Sport, desc: "Serien - Sport"}
+    - {id: 142, cat: TV, desc: "Serien - Pack"}
     - {id: 129, cat: Other, desc: "Sonstiges"}
     - {id: 109, cat: PC/Mobile-Other, desc: "Spiele - Handy"}
     - {id: 112, cat: Console, desc: "Spiele - Konsolen"}
@@ -71,7 +72,7 @@ settings:
   - name: info_free
     type: info
     label: About OnlyUpload at H-O-D
-    default: <li>OnlyUpload are torrents where download is not counted but upload is. Good for building your Ratio up. (On the Jackett dashboard search results these are tagged as Freeleech).</li>
+    default: "<ul><li>OnlyUpload are torrents where download is not counted but upload is. Good for building your Ratio up. (On the Jackett dashboard search results these are tagged as Freeleech).</li></ul>"
   - name: sort
     type: select
     label: Sort requested from site
@@ -92,6 +93,10 @@ settings:
     type: info
     label: Results Per Page
     default: For best results, change the <b>Torrents pro Seite:</b> setting to <b>100</b> on your Control Panel. The default is <i>15</i>.
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "If you are inactive for longer than 8 weeks, your account will be automatically deactivated."
 
 login:
   path: takelogin.php
@@ -161,7 +166,7 @@ search:
         - name: replace
           args: ["\xA0", " "]
         - name: dateparse
-          args: "02.01.2006 15:04:05 -07:00"
+          args: "dd.MM.yyyy HH:mm:ss zzz"
     downloadvolumefactor:
       case:
         img[src="/pic/free.gif"]: 0
@@ -173,4 +178,4 @@ search:
     minimumseedtime:
       # 5 days (as seconds = 5 x 24 x 60 x 60)
       text: 432000
-# engine n/a
+# NetVision

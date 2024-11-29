@@ -6,7 +6,10 @@ language: tr-TR
 type: public
 encoding: UTF-8
 links:
+  - https://0.torrentoyunindir.com/
+legacylinks:
   - https://www.torrentoyunindir.com/
+  - http://0.torrentoyunindir.com/
 
 caps:
   categories:
@@ -15,7 +18,9 @@ caps:
   modes:
     search: [q]
 
-settings: []
+settings:
+  - name: info_flaresolverr
+    type: info_flaresolverr
 
 download:
   selectors:
@@ -24,7 +29,9 @@ download:
 
 search:
   paths:
-    - path: "{{ if .Keywords }}?s={{ .Keywords }}{{ else }}{{ end }}"
+    - path: /
+  inputs:
+    s: "{{ .Keywords }}"
 
   rows:
     selector: div.moviefilm

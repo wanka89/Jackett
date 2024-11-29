@@ -21,10 +21,14 @@ settings:
     type: checkbox
     label: Search freeleech only
     default: false
-  - name: info
+  - name: info_hidden
     type: info
     label: "Hidden categories"
     default: "Results for categories hidden in account profile will not be visible."
+  - name: info_limit
+    type: info
+    label: "Download Ratio"
+    default: "GayTorrent.ru has a daily download slot limit as defined by your ratio, your uploads, your donations, etc. If downloads <b>fail</b> then you have exceeded your allocation. Access the web site to find more info <a href=\"https://www.gaytor.rent/rationator.php\" target=\"_blank\">here</a>"
   - name: sort
     type: select
     label: Sort requested from site
@@ -41,6 +45,10 @@ settings:
     options:
       desc: desc
       asc: asc
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "Unused accounts (both upload and download are zero) are disabled by the system after 60 days of no login. Used accounts with prior activity (upload and/or download) are disabled by the system after 240 days of no login."
 
 caps:
   categorymappings:
@@ -103,6 +111,8 @@ login:
   inputs:
     username: "{{ .Config.username }}"
     password: "{{ .Config.password }}"
+  error:
+    - selector: div.panel:has(h3:contains("Login failed"))
   test:
     path: browse.php
     selector: a[href$="/logout.php"]
@@ -115,12 +125,15 @@ search:
     search: "{{ .Keywords }}"
     # 0 active, 1 both, 2 dead
     incldead: 1
-    # where to search: name      , descr      , filename , freeleech only ,  wishlist
-    # where to search: inname=1, indesc=1, infn=1    , infl=1              ,   inbook=1
+    # where to search: name, descr, filename, freeleech only, wishlist
+    # where to search: inname=1, indesc=1, infn=1, infl=1, inbook=1
     inname: 1
     infl: "{{ if .Config.freeleech }}1{{ else }}{{ end }}"
     orderby: "{{ .Config.sort }}"
     sort: "{{ .Config.type }}"
+
+  headers:
+    Referer: ["{{ .Config.sitelink }}browse.php"]
 
   rows:
     selector: table.browse_result > tbody > tr:has(a[href^="details.php?id="])
@@ -167,13 +180,12 @@ search:
       selector: a[href$="&todlers=1"]
     date:
       selector: .tadded
+      # auto adjusted by site account profile
       filters:
         - name: re_replace
           args: ["(\\d{4}-\\d{2}-\\d{2})(\\d{2}:\\d{2}:\\d{2}).*", "$1 $2"]
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss"
     downloadvolumefactor:
       case:
         "td:nth-child(3) > div > nobr > font[color=\"yellow\"]": 0

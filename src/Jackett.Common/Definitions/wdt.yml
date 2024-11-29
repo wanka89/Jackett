@@ -87,6 +87,10 @@ settings:
     type: info
     label: Search results
     default: "If you are getting the error <b>Login Failed, got redirected</b> then access the site with your browser and <b>mark as read</b> all PMs."
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "Accounts inactive for more than 42 days are automatically deleted."
 
 login:
   path: login.php
@@ -125,7 +129,7 @@ search:
 
   keywordsfilters:
     - name: re_replace
-      args: ["(\\w+)", " +$1"] # prepend + to each word
+      args: ["(\\w+)", "+$1"] # prepend + to each word
 
   rows:
     selector: table.table-bordered tr:has(a[href^="download.php?torrent="])
@@ -155,11 +159,10 @@ search:
       selector: td:nth-child(5)
     date:
       selector: td:nth-child(7)
+      # auto adjusted by site account profile
       filters:
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
         - name: dateparse
-          args: "Jan 2 2006 03:04 PM -07:00"
+          args: "MMM d yyyy hh:mm tt"
     size:
       selector: td:nth-child(8)
     grabs:
@@ -168,6 +171,10 @@ search:
       selector: td:nth-child(10)
     leechers:
       selector: td:nth-child(11)
+    description:
+      case:
+        img[src="./pic/mod.gif"]: Verified
+        "*": Unverified
     downloadvolumefactor:
       case:
         "a.info:contains(\"[FREE]\")": 0
@@ -178,6 +185,6 @@ search:
     minimumratio:
       text: 1.0
     minimumseedtime:
-      # 2 days (as seconds = 2 x 24 x 60 x 60)
-      text: 172800
+      # 12 hours (as seconds = 12 x 60 x 60)
+      text: 43200
 # U-232 V5

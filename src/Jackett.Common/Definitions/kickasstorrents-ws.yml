@@ -1,11 +1,12 @@
 ---
 id: kickasstorrents-ws
+replaces:
+  - kickasstorrent-kathow
 name: kickasstorrents.ws
 description: "kickasstorrents.ws is a Public KickAssTorrent clone for TV / MOVIES / GENERAL"
 language: en-US
 type: public
 encoding: UTF-8
-followredirect: true
 links:
   - https://kickass.ws/
   - https://kickasstorrents.bz/
@@ -24,13 +25,6 @@ legacylinks:
   - https://kat.li/
   - https://katcr.to/ # kickasstorrents-to proxy
   - https://kickasstorrent.cr/ # kickasstorrents-to proxy
-  - https://kickass.unblockit.pro/
-  - https://kickass.unblockit.one/
-  - https://kickass.unblockit.me/
-  - https://kickass.unblockit.pw/
-  - https://kickass.unblockit.id/
-  - https://kickass.unblockit.win/
-  - https://kickass.unblockit.top/ # currently redirects to https://kat.unblockit.lat/ (newkatcr.co proxy)
   - https://kickasstorrents.unblockninja.com/ # currently kickasstorrents-to proxy
   - https://kickass-kat.com/
 
@@ -74,12 +68,10 @@ search:
     - path: "{{ if .Keywords }}usearch/{{ .Keywords }}/{{ else }}new/{{ end }}?field={{ .Config.sort }}&sorder={{ .Config.type }}"
 
   rows:
-    selector: table.data tr[id]
+    selector: table.data tr[id]:has(a[data-download])
 
   fields:
-    category:
-      text: other
-    category|noappend:
+    category_optional:
       selector: span[id^="cat_"] > strong > a
       attribute: href
       optional: true
@@ -87,6 +79,8 @@ search:
         - name: tolower
         - name: trim
           args: /
+    category:
+      text: "{{ if .Result.category_optional }}{{ .Result.category_optional }}{{ else }}other{{ end }}"
     title:
       selector: a[class="cellMainLink"]
     details:
@@ -94,7 +88,7 @@ search:
       attribute: href
     download:
       # the official site delivers mylink so we skip to the magnet URI
-      selector: td:nth-child(1) > div > a[data-download=""]
+      selector: td:nth-child(1) > div > a[data-download]
       attribute: href
       filters:
         - name: querystring

@@ -63,6 +63,12 @@ settings:
     type: info
     label: Alert
     default: HaiDan has switched to a <b>group</b> torrent list, which means this Indexer can only display the first item in each group.<br>This <b>yml</b> Indexer will eventually be re-written in c# as soon as a c# dev volunteers, to display all items in a group.
+  - name: info_flaresolverr
+    type: info_flaresolverr
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "Account retention rules:<ol><li>Veteran User and above will be retained forever</li><li>Elite User and above will not have their account deleted after parking (in the control panel)</li><li>Users with a parked account will be deleted if they do not log in for 400 consecutive days</li><li>Users with a non-parked account will be deleted if they do not log in for 150 consecutive days</li><li>Users with no traffic (ie, upload/download data are both 0) will be deleted if they do not log in for 100 consecutive days.</li></ol>"
 
 login:
   path: login.php
@@ -101,6 +107,7 @@ search:
     search_mode: 0
     sort: "{{ .Config.sort }}"
     type: "{{ .Config.type }}"
+    notnewword: 1
 
   rows:
     selector: div.group_content:has(a[href^="download.php?id="])
@@ -130,7 +137,6 @@ search:
       selector: a[href^="download.php?id="]
       attribute: href
     description:
-      optional: true
       selector: div.torrent_name_col > a
     poster:
       selector: img#poster
@@ -173,7 +179,7 @@ search:
         - name: append
           args: " +08:00" # CST
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     date_added:
       # time added
       selector: div.time_col:contains("发布于"):not(:has(span[title]))
@@ -185,7 +191,7 @@ search:
         - name: append
           args: " +08:00" # CST
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     date:
       text: "{{ if or .Result.date_elapsed .Result.date_added }}{{ or .Result.date_elapsed .Result.date_added }}{{ else }}now{{ end }}"
     minimumratio:

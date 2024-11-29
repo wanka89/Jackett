@@ -6,9 +6,9 @@ language: en-US
 type: private
 encoding: UTF-8
 links:
-  - http://pwtorrents.net/
+  - https://pwtorrents.net/
 legacylinks:
-  - https://pwtorrents.net/ # site is forcing to http
+  - http://pwtorrents.net/
 
 caps:
   categorymappings:
@@ -16,6 +16,7 @@ caps:
     - {id: 21, cat: TV/Sport, desc: "AEW Dynamite"}
     - {id: 20, cat: TV/Sport, desc: "AEW PPV"}
     - {id: 23, cat: TV/Sport, desc: "AEW Rampage"}
+    - {id: 28, cat: TV/Sport, desc: "AEW Collision"}
     - {id: 1, cat: TV/Sport, desc: "Boxing"}
     - {id: 2, cat: TV/Sport, desc: "Documentaries"}
     - {id: 3, cat: TV/Sport, desc: "DVD"}
@@ -109,6 +110,8 @@ search:
           args: cat
     title:
       selector: a[href^="details.php?id="]
+      optional: true
+      default: No Title
     details:
       selector: a[href^="details.php?id="]
       attribute: href
@@ -126,7 +129,7 @@ search:
         - name: append
           args: " +00:00" # GMT
         - name: dateparse
-          args: "2006-01-0215:04:05 -07:00"
+          args: "yyyy-MM-ddHH:mm:ss zzz"
     size:
       selector: td:nth-child(5)
     grabs:

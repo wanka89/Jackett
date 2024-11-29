@@ -28,12 +28,14 @@ caps:
     - {id: 91, cat: TV, desc: "Prime Video"}
     - {id: 93, cat: TV, desc: "Gain"}
     - {id: 94, cat: TV, desc: "ATVP"}
+    - {id: 95, cat: Movies, desc: "HMAX"}
+    - {id: 98, cat: Movies, desc: "PUHUTV"}
     - {id: 58, cat: Movies, desc: "Film"}
     - {id: 72, cat: Movies, desc: "Belgesel"}
     - {id: 60, cat: Movies/3D, desc: "3D"}
     - {id: 76, cat: Movies/UHD, desc: "4K UHD"}
     - {id: 80, cat: TV/Sport, desc: "Formula-1"}
-    - {id: 45, cat: Other, desc: "Eğitim / Prog"}
+    - {id: 45, cat: Other, desc: "Eğitim/Prog"}
     - {id: 1, cat: Movies, desc: "Filmler"}
     - {id: 14, cat: Movies/3D, desc: "3D Film"}
     - {id: 77, cat: Movies/UHD, desc: "4K UHD"}
@@ -66,7 +68,6 @@ caps:
     - {id: 88, cat: Console/Other, desc: "Oyun NEO-GEO"}
     - {id: 89, cat: Console/Wii, desc: "Oyun Nintendo Wii"}
     - {id: 6, cat: PC/0day, desc: "Program"}
-    - {id: 92, cat: PC/Mobile-Android, desc: "Android"}
     - {id: 47, cat: Other, desc: "Resimler"}
     - {id: 48, cat: TV, desc: "Televizyon"}
     - {id: 49, cat: TV/HD, desc: "Tv HD"}
@@ -95,7 +96,7 @@ settings:
   - name: info
     type: info
     label: Layout
-    default: "<ol><li>Only the English Classic profile is supported.<li>Make sure to set the <b>Torrent Listing (Listeleme Biçimi)</b> option in your profile to <b>Classic (Klasik)</b><li>And set the <b>Language (Dil)</b> to <b>English</b><li>Using the <i>Modern</i> theme will prevent results, and using <i>Turkish</i> will prevent upload dates.</ol>"
+    default: "<ul><li>Only the English Classic profile is supported.</li><li>Make sure to set the <b>Torrent Listing (Listeleme Biçimi)</b> option in your profile to <b>Classic (Klasik)</b></li><li>And set the <b>Language (Dil)</b> to <b>English</b></li><li>Using the <i>Modern</i> theme will prevent results, and using <i>Turkish</i> will prevent upload dates.</li></ul>"
   - name: sort
     type: select
     label: Sort requested from site
@@ -111,6 +112,10 @@ settings:
     options:
       desc: desc
       asc: asc
+  - name: info_results
+    type: info
+    label: Search results
+    default: "If you are getting the error <b>Found no results while trying to browse this tracker</b> then first access the site with your browser and check that you are not being forced to change your password because it has expired after 365 days."
 
 login:
   path: ?p=home&pid=1
@@ -172,34 +177,34 @@ search:
     download:
       selector: a[href*="?p=torrents&pid=10&action=download"]
       attribute: href
-    date_year:
-      # Uploaded 30-01-2019 15:02 by
-      selector: td.torrent_name:not(:contains(" at ")):not(:has(abbr[data-time]))
-      optional: true
-      filters:
-        - name: regexp
-          args: "Uploaded (.+?) by"
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
-        - name: dateparse
-          args: "02-01-2006 15:04 -07:00"
     date_day:
       # Uploaded Friday at 05:11 by
       # Uploaded Today at 00:48 by
       # Uploaded Yesterday at 23:57 by
       selector: td.torrent_name:contains(" at "):not(:has(abbr[data-time]))
+      # auto adjusted by site account profile
       optional: true
       filters:
         - name: regexp
           args: "Uploaded (.+?) by"
         - name: fuzzytime
+    date_year:
+      # Uploaded 30-01-2019 15:02 by
+      selector: td.torrent_name:not(:contains(" at ")):not(:has(abbr[data-time]))
+      # auto adjusted by site account profile
+      optional: true
+      filters:
+        - name: regexp
+          args: "Uploaded (.+?) by"
+        - name: dateparse
+          args: "dd-MM-yyyy HH:mm"
     date_unix:
       # within the hour (unix)
       selector: abbr[data-time]
       attribute: data-time
       optional: true
     date:
-      text: "{{ if or .Result.date_year .Result.date_unix .Result.date_day }}{{ or .Result.date_year .Result.date_unix .Result.date_day }}{{ else }}now{{ end }}"
+      text: "{{ if or .Result.date_day .Result.date_year .Result.date_unix }}{{ or .Result.date_day .Result.date_year .Result.date_unix }}{{ else }}now{{ end }}"
     size:
       selector: a[rel="torrent_size"]
     seeders:

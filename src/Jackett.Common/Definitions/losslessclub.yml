@@ -1,10 +1,10 @@
 ---
 id: losslessclub
 name: LosslessClub
-description: "LosslessClub is a Romanian Private site for High Quality Music"
+description: "LosslessClub is a RUSSIAN Private site for High Quality Music"
 language: ru-RU
 type: private
-encoding: windows-1251
+encoding: UTF-8
 links:
   - https://losslessclub.com/
 
@@ -15,6 +15,18 @@ caps:
   modes:
     search: [q]
     music-search: [q, artist]
+
+settings:
+  - name: username
+    type: text
+    label: Username
+  - name: password
+    type: password
+    label: Password
+  - name: info_login
+    type: info
+    label: About LosslessClub Forum versus LosslessClub Tracker
+    default: "The  <a href=\"https://losslessclub.com/\" target=\"_blank\">LosslessClub Forum</a> credentials are different from the <a href=\"https://losslessclub.com/login.php\" target=\"_blank\">LosslessClub Tracker</a> credentials so if the indexer is giving you 'Error Username or password is incorrect' then you are likely using the Forum credentials to access the Tracker."
 
 login:
   path: takelogin.php
@@ -78,11 +90,11 @@ search:
         - name: append
           args: " +03:00" # MSK
         - name: dateparse
-          args: "2/01/06 -07:00"
+          args: "d/MM/yy zzz"
     description:
       selector: div.tag_list_browse
     downloadvolumefactor:
       text: 1
     uploadvolumefactor:
       text: 1
-# engine tbd
+# Кinokрk releaser v. 2.40.473

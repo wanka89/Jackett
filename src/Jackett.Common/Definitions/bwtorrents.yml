@@ -7,10 +7,15 @@ type: private
 encoding: UTF-8
 links:
   - https://bwtorrents.tv/
+  - https://www.bwtorrents.life/
+  - https://www.bwtorrents.pro/
+  - https://bwtorrents.cc/
+legacylinks:
   - https://bwtorrents.fun/
   - https://bwtorrents.xyz/
   - https://bwtorrents.us/
   - https://bwtorrents.live/
+  - https://bwtorrents.co/
 
 caps:
   categorymappings:
@@ -120,6 +125,8 @@ caps:
     - {id: 217, cat: Movies, desc: "Tamil-Movies | Remuxes BluRay"}
     - {id: 218, cat: TV, desc: "TV-Ishara TV"}
     - {id: 219, cat: TV, desc: "TV-Bengali Tv"}
+    - {id: 220, cat: TV, desc: "TV-Shemaroo Umang"}
+    - {id: 221, cat: TV, desc: "TV-JioTv"}
 
   modes:
     search: [q]
@@ -139,6 +146,12 @@ settings:
     type: checkbox
     label: Search freeleech only
     default: false
+  - name: info_flaresolverr
+    type: info_flaresolverr
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "Account activity:<ol><li>Zero activity accounts (0 bytes download and 0 bytes upload) are automatically deleted after 30 days</li><li>Inactive accounts under VIP and without parked are automatically deleted after 40 days.</li></ol>"
 
 login:
   path: takelogin.php
@@ -167,6 +180,8 @@ search:
 
   rows:
     selector: table[width="1200"] > tbody > tr:has(a[href^="download.php/"])
+    filters:
+      - name: andmatch
 
   fields:
     category:
@@ -184,11 +199,10 @@ search:
       selector: td:nth-child(3)
     date:
       selector: td:nth-child(5)
+      # auto adjusted by site account profile
       filters:
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
         - name: dateparse
-          args: "02-01-200615:04:05 -07:00"
+          args: "dd-MM-yyyyHH:mm:ss"
     size:
       selector: td:nth-child(6)
     download:

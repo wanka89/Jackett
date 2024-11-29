@@ -89,6 +89,10 @@ settings:
     options:
       desc: desc
       asc: asc
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "You must login regularly to maintain an active account. For User and Member, you must login once every 4 months. For Power User, Master and Elite you must login once per year. If you fail to do this your account will be disabled."
 
 login:
   path: login
@@ -121,14 +125,18 @@ search:
 
   rows:
     # exclude redbar torrents
-    selector: table#torrent_table > tbody > tr[class^="torrent row"]
+    selector: table#torrent_table > tbody > tr[class^="torrent row"]:has(a[href*="action=download"])
 
   fields:
     download:
       selector: a[href^="torrents.php?action=download&id="]
       attribute: href
-    description:
+    description_tags:
       selector: div.tags
+    description:
+      case:
+        span.icon_okay: "Verified: {{ .Result.description_tags }}"
+        "*": "Unverified: {{ .Result.description_tags }}"
     title:
       selector: a[href^="/torrents.php?id="]
     category:
@@ -154,22 +162,20 @@ search:
     date_elapsed:
       # <td class="nobr"><span class="time" alt="1 month ago" title="1 month ago">Oct 01 2022, 18:41</span></td>
       selector: td:nth-child(5) > span:not(:contains("ago"))
+      # auto adjusted by site account profile
       optional: true
       filters:
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
         - name: dateparse
-          args: "Jan 02 2006, 15:04 -07:00"
+          args: "MMM dd yyyy, HH:mm"
     date_added:
     # <td class="nobr"><span class="time" alt="Nov 17 2022, 01:44" title="Nov 17 2022, 01:44">13 hours ago</span></td>
       selector: td:nth-child(5) > span:contains("ago")
       attribute: title
+      # auto adjusted by site account profile
       optional: true
       filters:
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
         - name: dateparse
-          args: "Jan 02 2006, 15:04 -07:00"
+          args: "MMM dd yyyy, HH:mm"
     date:
       text: "{{ if or .Result.date_elapsed .Result.date_added }}{{ or .Result.date_elapsed .Result.date_added }}{{ else }}now{{ end }}"
     size:
@@ -185,7 +191,10 @@ search:
         img[src$="/freedownload.gif"]: 0
         "*": 1
     uploadvolumefactor:
-      text: 1
+      case:
+        span.icon[title*="DoubleSeed"]: 2
+        "img[alt=\"DoubleSeed\"]": 2
+        "*": 1
     minimumratio:
       text: 0.5
 # luminance

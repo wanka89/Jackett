@@ -6,15 +6,16 @@ language: ru-RU
 type: public
 encoding: UTF-8
 links:
-  - http://vsthouse.ru/ # site forces http
+  - https://vsthouse.ru/
+legacylinks:
+  - http://vsthouse.ru/
 
 caps:
   categories:
-    Audio: Audio
+    PC: PC
 
   modes:
     search: [q]
-    music-search: [q]
 
 settings: []
 
@@ -39,7 +40,7 @@ search:
 
   fields:
     category:
-      text: Audio
+      text: PC
     title:
       selector: div.eTitle a
     details:
@@ -59,7 +60,7 @@ search:
         - name: append
           args: " +03:00" # MSK
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     size:
       text: "512 MB"
     seeders:

@@ -5,34 +5,20 @@ description: "LimeTorrents is a Public general torrent index with mostly verifie
 language: en-US
 type: public
 encoding: UTF-8
-followredirect: true
 # changes to this indexer should also be made to limetorrentsclone
 links:
   - https://www.limetorrents.lol/
-  - https://limetorrents.unblockit.page/
   - https://limetorrents.unblockninja.com/
-  - https://limetorrents.nocensor.lol/
+  - https://limetorrents.ninjaproxy1.com/
+  - https://limetorrents.proxyninja.org/
+  - https://limetorrents.proxyninja.net/
+  - https://limetorrents.torrentbay.st/
+  - https://limetorrents.torrentsbay.org/
 legacylinks:
-  - https://www.limetorrents.io/
-  - https://www.limetorrents.cc/
-  - https://www.limetorrents.me/
-  - https://www.limetorrents.zone/ # redirects to .info
-  - https://www.limetorrents.info/
-  - https://www.limetorrents.asia/
-  - https://www.limetorrents.co/
-  - https://limetor.com/
-  - https://www.limetor.pro/
-  - https://limetorrents.nocensor.biz/
-  - https://www.limetorrents.pro/
-  - https://limetorrents.unblockit.llc/
-  - https://limetorrents.unblockit.blue/
-  - https://limetorrents.unblockit.name/
-  - https://limetorrents.nocensor.sbs/
-  - https://limetorrents.unblockit.ist/
-  - https://limetorrents.unblockit.bet/
-  - https://limetorrents.unblockit.cat/
-  - https://limetorrents.unblockit.nz/
-  - https://limetorrents.nocensor.world/
+  - https://limetorrents.mrunblock.bond/
+  - https://limetorrents.nocensor.cloud/
+  - https://limetorrents.abcproxy.org/
+  - https://limetorrents.unblockit.download/
 
 caps:
   categorymappings:
@@ -43,12 +29,14 @@ caps:
     - {id: Applications, cat: PC/0day, desc: Applications}
     - {id: Other, cat: Other, desc: Other}
     - {id: Anime, cat: TV/Anime, desc: Anime}
+    - {id: E-books, cat: Books/EBook, desc: E-books}
 
   modes:
     search: [q]
     tv-search: [q, season, ep]
     movie-search: [q]
     music-search: [q]
+    book-search: [q]
 
 settings:
   - name: downloadlink
@@ -77,7 +65,7 @@ settings:
       date: created
       seeds: seeders
       size: size
-  - name: info_8000
+  - name: info_category_8000
     type: info
     label: About LimeTorrents Categories
     default: LimeTorrents only returns category <b>Other</b> in its <i>Keywordless</i> search results page.</br>To pass your apps' indexer TEST you will need to include the 8000(Other) category.
@@ -101,18 +89,6 @@ search:
     selector: .table2 > tbody > tr[bgcolor]
 
   fields:
-    category:
-      text: Other
-    category|noappend:
-      optional: true
-      selector: td:nth-child(2)
-      filters:
-        - name: split
-          args: ["-", 1]
-        - name: replace
-          args: [" in ", ""]
-        - name: replace
-          args: [".", ""]
     title:
       selector: div.tt-name > a[href^="/"]
       attribute: href
@@ -121,6 +97,18 @@ search:
           args: "/(.+?)-torrent-\\d+\\.html"
         - name: re_replace
           args: ["-", " "]
+    category_is_tv_show:
+      text: "{{ .Result.title }}"
+      filters:
+        - name: regexp
+          args: "\\b(S\\d+(?:E\\d+)?)\\b"
+    category:
+      selector: td:nth-child(2)
+      optional: true
+      default: "{{ if .Result.category_is_tv_show }}TV shows{{ else }}Other{{ end }}"
+      filters:
+        - name: regexp
+          args: " in (.+?)[.]?$"
     details:
       selector: div.tt-name > a[href^="/"]
       attribute: href

@@ -6,6 +6,8 @@ language: es-ES
 type: public
 encoding: UTF-8
 requestDelay: 2
+certificates:
+  - 0e43335b4c778e95f8e4db46e20cc3d0e84e59ff  # expired 19 June 2024
 links:
   - https://www.frozen-layer.com/
 
@@ -60,6 +62,8 @@ search:
     selector: table#descargas > tbody > tr:has(td:has(a[href^="magnet:?"]))
 
   fields:
+    category:
+      text: "{{ if eq .Config.category \"todos\" }}Anime{{ else }}{{ .Config.category }}{{ end }}"
     title:
       selector: td.tit a
       filters:
@@ -84,11 +88,6 @@ search:
     magnet:
       selector: td:nth-child(1) a[href^="magnet:?"]
       attribute: href
-    category:
-      text: Anime
-    category|noappend:
-      optional: true
-      selector: td.tit span
     date_day:
       # 1d
       # 2d 3h
@@ -108,7 +107,7 @@ search:
         - name: append
           args: " +01:00" # CET
         - name: dateparse
-          args: "02 Jan 06 -07:00"
+          args: "dd MMM yy zzz"
     date:
       text: "{{ if or .Result.date_year .Result.date_day }}{{ or .Result.date_year .Result.date_day }}{{ else }}now{{ end }}"
     size:

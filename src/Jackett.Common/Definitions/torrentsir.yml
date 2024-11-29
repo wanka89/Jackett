@@ -7,29 +7,27 @@ type: public
 encoding: UTF-8
 followredirect: true
 links:
-  - https://torrentsir82.com/
+  - https://torrentsir160.com/
 legacylinks:
-  - http://torrentsir72.com/
-  - https://torrentsir72.com/
-  - http://torrentsir73.com/
-  - https://torrentsir73.com/
-  - http://torrentsir74.com/
-  - https://torrentsir74.com/
-  - http://torrentsir75.com/
-  - https://torrentsir75.com/
-  - http://torrentsir76.com/
-  - https://torrentsir76.com/
-  - http://torrentsir77.com/
-  - https://torrentsir77.com/
-  - http://torrentsir78.com/
-  - https://torrentsir78.com/
-  - http://torrentsir79.com/
-  - https://torrentsir79.com/
-  - http://torrentsir80.com/
-  - https://torrentsir80.com/
-  - http://torrentsir81.com/
-  - https://torrentsir81.com/
-  - http://torrentsir82.com/
+  - http://torrentsir151.com/
+  - https://torrentsir151.com/
+  - http://torrentsir152.com/
+  - https://torrentsir152.com/
+  - http://torrentsir153.com/
+  - https://torrentsir153.com/
+  - http://torrentsir154.com/
+  - https://torrentsir154.com/
+  - http://torrentsir155.com/
+  - https://torrentsir155.com/
+  - http://torrentsir156.com/
+  - https://torrentsir156.com/
+  - http://torrentsir157.com/
+  - https://torrentsir157.com/
+  - http://torrentsir158.com/
+  - https://torrentsir158.com/
+  - http://torrentsir159.com/
+  - https://torrentsir159.com/
+  - http://torrentsir160.com/
 
 caps:
   categorymappings:
@@ -37,6 +35,7 @@ caps:
     - {id: "ani", cat: TV, desc: "동영상 (Video)"}
     - {id: "game", cat: Console, desc: "기타 (Games)"}
     - {id: "tv", cat: TV, desc: "시사/교양 (TV)"}
+    - {id: "netflix", cat: TV, desc: "넷플시리즈 (Netflix)"}
     - {id: "movie", cat: Movies, desc: "영화 (Movie)"}
     - {id: "drama", cat: TV, desc: "드라마 (Drama)"}
     - {id: "entertain", cat: TV, desc: "예능/오락 (Entertainment)"}
@@ -54,10 +53,8 @@ caps:
     book-search: [q]
 
 settings:
-  - name: flaresolverr
-    type: info
-    label: FlareSolverr
-    default: This site may use Cloudflare DDoS Protection, therefore Jackett requires <a href="https://github.com/Jackett/Jackett#configuring-flaresolverr" target="_blank">FlareSolverr</a> to access it.
+  - name: info_flaresolverr
+    type: info_flaresolverr
 
 download:
   infohash:

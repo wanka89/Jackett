@@ -50,10 +50,12 @@ settings:
     options:
       2: desc
       1: asc
+  - name: info_flaresolverr
+    type: info_flaresolverr
 
 search:
   paths:
-    - path: tracker.php#results
+    - path: tracker.php
       method: post
   inputs:
     $raw: "{{ if .Categories }}{{ range .Categories }}&f[]={{.}}{{end}}{{ else }}&f[]=-1{{ end }}"

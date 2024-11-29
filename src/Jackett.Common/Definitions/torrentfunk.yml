@@ -5,33 +5,16 @@ description: "TorrentFunk is a Public torrent index"
 language: en-US
 type: public
 encoding: UTF-8
-followredirect: true
 links:
   - https://www.torrentfunk.com/
   - https://www.torrentfunk2.com/
-  - https://torrentfunk.unblockit.page/
-  - https://torrentfunk.nocensor.lol/
+  - https://torrentfunk.ninjaproxy1.com/
+  - https://torrentfunk.proxyninja.org/
+  - https://torrentfunk.proxyninja.net/
 legacylinks:
-  - https://torrentfunk.unblockit.ch/
-  - https://torrentfunk.nocensor.space/
-  - https://torrentfunk.unblockit.ws/
-  - https://torrentfunk.nocensor.work/
-  - https://torrentfunk.unblockit.kim/
-  - https://torrentfunk.unblockit.bz/
-  - https://torrentfunk.unblockit.tv/
-  - https://torrentfunk.unblockit.how/
-  - https://torrentfunk.unblockit.cam/
-  - https://torrentfunk.nocensor.biz/
-  - https://torrentfunk.unblockit.day/
-  - https://torrentfunk.unblockit.llc/
-  - https://torrentfunk.unblockit.blue/
-  - https://torrentfunk.unblockit.name/
-  - https://torrentfunk.nocensor.sbs/
-  - https://torrentfunk.unblockit.ist/
-  - https://torrentfunk.unblockit.bet/
-  - https://torrentfunk.unblockit.cat/
-  - https://torrentfunk.unblockit.nz/
-  - https://torrentfunk.nocensor.world/
+  - https://torrentfunk.nocensor.cloud/
+  - https://torrentfunk.mrunblock.bond/
+  - https://torrentfunk.unblockit.download/
 
 caps:
   categorymappings:
@@ -109,7 +92,7 @@ search:
         - name: append
           args: " -07:00" # PDT
         - name: dateparse
-          args: "2 Jan -07:00"
+          args: "d MMM zzz"
     date:
       text: "{{ if or .Result.date_month .Result.date_day }}{{ or .Result.date_month .Result.date_day }}{{ else }}now{{ end }}"
     size:

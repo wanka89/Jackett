@@ -41,6 +41,7 @@ caps:
     - {id: 190, cat: Movies, desc: "Movies/Netflix Film"}
     - {id: 195, cat: TV, desc: "TV/Exxen"}
     - {id: 199, cat: TV, desc: "TV/GAİN"}
+    - {id: 201, cat: TV, desc: "TV/Tabii"}
     - {id: 171, cat: Audio, desc: "Music"}
     - {id: 172, cat: Audio, desc: "Music/Turkish"}
     - {id: 173, cat: Audio, desc: "Music/Foreign"}
@@ -65,12 +66,11 @@ caps:
     book-search: [q]
 
 settings:
-  - name: username
+  - name: cookie
     type: text
-    label: Username
-  - name: password
-    type: password
-    label: Password
+    label: Cookie
+  - name: info_cookie
+    type: info_cookie
   - name: freeleech
     type: checkbox
     label: Filter freeleech only
@@ -78,7 +78,7 @@ settings:
   - name: info
     type: info
     label: Layout
-    default: "<ol><li>Only the English Classic profile is supported.<li>Make sure to set the <b>Torrent Listing (Listeleme Biçimi)</b> option in your profile to <b>Classic (Klasik)</b><li>And set the <b>Language (Dil)</b> to <b>English</b><li>Using the <i>Modern</i> theme will prevent results, and using <i>Turkish</i> will prevent upload dates.</ol>"
+    default: "<ul><li>Only the English Classic profile is supported.</li><li>Make sure to set the <b>Torrent Listing (Listeleme Biçimi)</b> option in your profile to <b>Classic (Klasik)</b></li><li>And set the <b>Language (Dil)</b> to <b>English</b></li><li>Using the <i>Modern</i> theme will prevent results, and using <i>Turkish</i> will prevent upload dates.</li></ul>"
   - name: sort
     type: select
     label: Sort requested from site
@@ -100,23 +100,10 @@ settings:
     default: "If you are getting the error: <b>An error has occurred!You can't view this page unless you read all your unread messages</b>, then access the site with your browser and <b>mark as read</b> all PMs."
 
 login:
-  path: ?p=home&pid=1
-  method: form
-  form: form#loginbox_form
-  submitpath: ajax/login.php
+  # using cookie method because login page has embedded Google reCAPTCHA
+  method: cookie
   inputs:
-    action: login
-    loginbox_membername: "{{ .Config.username }}"
-    loginbox_password: "{{ .Config.password }}"
-    loginbox_remember: 1
-  selectorinputs:
-    securitytoken:
-      selector: "script:contains(\"stKey: \")"
-      filters:
-        - name: regexp
-          args: "stKey: \"(.+?)\","
-  error:
-    - selector: ":contains(\"-ERROR-\")"
+    cookie: "{{ .Config.cookie }}"
   test:
     path: ?p=torrents&type=bookmarks&pid=508
     selector: a#logout
@@ -124,9 +111,6 @@ login:
 search:
   paths:
     - path: /
-  keywordsfilters:
-    - name: re_replace
-      args: ["[^a-zA-Z0-9]+", "%25"]
   inputs:
     p: torrents
     pid: 32
@@ -142,6 +126,8 @@ search:
 
   rows:
     selector: "table#torrents_table_classic > tbody > tr:has(td.torrent_name){{ if .Config.freeleech }}:has(img[title=\"FREE!\"]){{ else }}{{ end }}"
+    filters:
+      - name: andmatch
 
   fields:
     category:
@@ -151,41 +137,44 @@ search:
         - name: querystring
           args: cid
     title:
-      selector: a[href*="?p=torrents&pid=10&action=details"]
+      selector: td.torrent_name > a
     details:
-      selector: a[href*="?p=torrents&pid=10&action=details"]
+      selector: td.torrent_name > a
       attribute: href
     download:
-      selector: a[href*="?p=torrents&pid=10&action=download"]
+      selector: td.download > a
       attribute: href
-    date_year:
-      # Uploaded 30-01-2019 15:02 by
-      selector: td.torrent_name:not(:contains(" at ")):not(:has(abbr[data-time]))
-      optional: true
-      filters:
-        - name: regexp
-          args: "Uploaded (.+?) by"
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
-        - name: dateparse
-          args: "02-01-2006 15:04 -07:00"
+    magnet:
+      selector: a[href^="magnet:?xt="]
+      attribute: href
     date_day:
       # Uploaded Friday at 05:11 by
       # Uploaded Today at 00:48 by
       # Uploaded Yesterday at 23:57 by
       selector: td.torrent_name:contains(" at "):not(:has(abbr[data-time]))
+      # auto adjusted by site account profile
       optional: true
       filters:
         - name: regexp
           args: "Uploaded (.+?) by"
         - name: fuzzytime
+    date_year:
+      # Uploaded 30-01-2019 15:02 by
+      selector: td.torrent_name:not(:contains(" at ")):not(:has(abbr[data-time]))
+      # auto adjusted by site account profile
+      optional: true
+      filters:
+        - name: regexp
+          args: "Uploaded (.+?) by"
+        - name: dateparse
+          args: "dd-MM-yyyy HH:mm"
     date_unix:
       # within the hour (unix)
       selector: abbr[data-time]
       attribute: data-time
       optional: true
     date:
-      text: "{{ if or .Result.date_year .Result.date_unix .Result.date_day }}{{ or .Result.date_year .Result.date_unix .Result.date_day }}{{ else }}now{{ end }}"
+      text: "{{ if or .Result.date_day .Result.date_year .Result.date_unix }}{{ or .Result.date_day .Result.date_year .Result.date_unix }}{{ else }}now{{ end }}"
     size:
       selector: a[rel="torrent_size"]
     seeders:
@@ -207,5 +196,5 @@ search:
         "img[title=\"Upload Multiplier: 2\"]": 2
         "*": 1
     minimumratio:
-      text: 0.5
+      text: 0.7
 # TSUE 2.2

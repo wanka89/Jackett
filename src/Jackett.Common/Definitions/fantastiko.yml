@@ -6,7 +6,9 @@ language: el-GR
 type: private
 encoding: UTF-8
 links:
-  - http://fantastiko.space/ # https is not supported
+  - https://fantastiko.space/
+legacylinks:
+  - http://fantastiko.space/
 
 caps:
   categorymappings:
@@ -67,6 +69,10 @@ settings:
     type: checkbox
     label: Filter freeleech only
     default: false
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "Newcomers with zero offer and participation are deleted after 1 week. Those users who fall into a ratio below 1 or make 3 hit'n'runs (2 for newcomers) become a redshirt (this means limited access to the tracker, removal of invites and reset of forum statistics) and at 5, if they don't enter the seed and 15 days pass, they are banned to the nearest barren planet..."
 
 login:
   path: ?p=home&pid=1
@@ -149,8 +155,9 @@ search:
     uploadvolumefactor:
       text: 1
     date_day:
-      optional: true
       selector: td.torrent_name:contains("day"), td.torrent_name:contains("σήμερα"), td.torrent_name:contains("εχθές"), td.torrent_name:contains("Δευτέρα"), td.torrent_name:contains("Τρίτη"), td.torrent_name:contains("Τετάρτη"), td.torrent_name:contains("Πέμπτη"), td.torrent_name:contains("Παρασκευή"), td.torrent_name:contains("Σάββατο"), td.torrent_name:contains("Κυριακή")
+      # auto adjusted by site account profile
+      optional: true
       remove: span, a
       filters:
         - name: replace
@@ -185,8 +192,9 @@ search:
           args: ["Κυριακή", "Sunday"]
         - name: fuzzytime
     date_year:
-      optional: true
       selector: td.torrent_name:contains("-")
+      # auto adjusted by site account profile
+      optional: true
       remove: span, a
       filters:
         - name: replace
@@ -203,12 +211,10 @@ search:
           args: [" τον/την", ""] # him/her
         - name: replace
           args: ["στις ", ""] # at
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
         - name: dateparse
-          args: "02-01-2006 15:04 -07:00"
+          args: "dd-MM-yyyy HH:mm"
     date:
-      text: "{{ if or .Result.date_year .Result.date_day }}{{ or .Result.date_year .Result.date_day }}{{ else }}now{{ end }}"
+      text: "{{ if or .Result.date_day .Result.date_year }}{{ or .Result.date_day .Result.date_year }}{{ else }}now{{ end }}"
     minimumratio:
       text: 1.0
     minimumseedtime:

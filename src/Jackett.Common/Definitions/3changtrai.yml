@@ -1,7 +1,7 @@
 ---
 id: 3changtrai
 name: 3ChangTrai
-description: "3ChangTrai (3CT) is a VIETNAMESE Private Torrent Tracker for HD MOVIES / TV"
+description: "3ChangTrai (3CT) is a VIETNAMESE Private Torrent Tracker for HD MOVIES / TV / GENERAL"
 language: vi-VN
 type: private
 encoding: UTF-8
@@ -56,10 +56,16 @@ settings:
     options:
       desc: desc
       asc: asc
+  - name: info_flaresolverr
+    type: info_flaresolverr
   - name: info_tpp
     type: info
     label: Results Per Page
     default: For best results, change the <b>Torrents per page:</b> setting to <b>100</b> on your account profile.
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "Cherish your account. Inactive accounts will be deleted based on the following provisions:<ol><li>Nexus Master or later will not be deleted account.</li><li>Veteran User or higher will not be deleted if temporarily locked (at User Settings).</li><li>Temporarily locked accounts will be deleted if not logged in within 90 days.</li><li>Accounts that are not temporarily locked will be deleted if they do not log in within 60 days.</li><li>Accounts with no storage for uploads and downloads will be deleted if they do not log in within 30 days or have registered within 14 days.</li></ol>"
 
 login:
   path: login.php
@@ -99,7 +105,7 @@ search:
     search_mode: 0
     sort: "{{ .Config.sort }}"
     type: "{{ .Config.type }}"
-    # does not return imdb link in results
+    notnewword: 1
 
   rows:
     selector: table.torrents > tbody > tr:has(table.torrentname)
@@ -113,47 +119,52 @@ search:
           args: cat
     title_default:
       selector: a[href^="details.php?id="]
-    title_optional:
-      optional: true
+    title:
       selector: a[title][href^="details.php?id="]
       attribute: title
-    title:
-      text: "{{ if .Result.title_optional }}{{ .Result.title_optional }}{{ else }}{{ .Result.title_default }}{{ end }}"
+      optional: true
+      default: "{{ .Result.title_default }}"
     details:
       selector: a[href^="details.php?id="]
       attribute: href
     download:
       selector: a[href^="download.php?id="]
       attribute: href
+    poster:
+      selector: img[data-src]
+      attribute: data-src
+    imdbid:
+      selector: a[href*="imdb.com/title/tt"]
+      attribute: href
     date_elapsed:
       # time type: time elapsed (default)
-      selector: td:nth-child(4) > span[title]
+      selector: td.rowfollow:nth-child(5) > span[title]
       attribute: title
       optional: true
       filters:
         - name: append
           args: " +07:00" # ICT
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     date_added:
       # time added
-      selector: td:nth-child(4):not(:has(span))
+      selector: td.rowfollow:nth-child(5):not(:has(span))
       optional: true
       filters:
         - name: append
           args: " +07:00" # ICT
         - name: dateparse
-          args: "2006-01-0215:04:05 -07:00"
+          args: "yyyy-MM-ddHH:mm:ss zzz"
     date:
       text: "{{ if or .Result.date_elapsed .Result.date_added }}{{ or .Result.date_elapsed .Result.date_added }}{{ else }}now{{ end }}"
     size:
-      selector: td:nth-child(5)
+      selector: td.rowfollow:nth-child(6)
     seeders:
-      selector: td:nth-child(6)
+      selector: td.rowfollow:nth-child(7)
     leechers:
-      selector: td:nth-child(7)
+      selector: td.rowfollow:nth-child(8)
     grabs:
-      selector: td:nth-child(8)
+      selector: td.rowfollow:nth-child(9)
     downloadvolumefactor:
       case:
         img.pro_free: 0
@@ -168,7 +179,10 @@ search:
         img.pro_free2up: 2
         img.pro_2up: 2
         "*": 1
+    minimumseedtime:
+      # 3 days (as seconds = 3 x 24 x 60 x 60)
+      text: 259200
     description:
-      selector: td:nth-child(2)
-      remove: a, img
-# NexusPHP Standard v1.5 Beta 4
+      selector: td:nth-child(3)
+      remove: a, b, font, img, span
+# NexusPHP 3ChangTrai v3.0 2020-04-30

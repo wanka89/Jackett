@@ -13,9 +13,12 @@ legacylinks:
 caps:
   categorymappings:
     - {id: 65, cat: Movies/3D, desc: "3D Film"}
+    - {id: 82, cat: Movies/UHD, desc: "4K video"}
     - {id: 79, cat: PC/Mobile-Android, desc: "Android"}
     - {id: 37, cat: Movies, desc: "Deca"}
     - {id: 43, cat: TV/Documentary, desc: "Dokumentarci"}
+    - {id: 83, cat: Movies/BluRay, desc: "Film/BluRay Domaće"}
+    - {id: 84, cat: Movies/BluRay, desc: "Film/Digitalno Restaurisani"}
     - {id: 52, cat: Movies/DVD, desc: "Film/DVD Domaće"}
     - {id: 20, cat: Movies/DVD, desc: "Film/DVD Strano"}
     - {id: 73, cat: Movies/HD, desc: "Film/HD Domaće"}
@@ -26,12 +29,12 @@ caps:
     - {id: 61, cat: Movies/HD, desc: "HD Mesano"}
     - {id: 50, cat: PC/Games, desc: "Igre"}
     - {id: 44, cat: Books, desc: "Knjige"}
-    - {id: 80, cat: TV, desc: "Paketi"}
     - {id: 46, cat: Audio, desc: "Koncerti"}
     - {id: 58, cat: Audio/Lossless, desc: "Lossless/Domaće"}
     - {id: 59, cat: Audio/Lossless, desc: "Lossless/Strano"}
     - {id: 5, cat: Audio/MP3, desc: "MP3/Domaće"}
     - {id: 57, cat: Audio/MP3, desc: "MP3/Strano"}
+    - {id: 80, cat: TV, desc: "Paketi"}
     - {id: 49, cat: PC, desc: "Programi"}
     - {id: 28, cat: Other, desc: "Razno"}
     - {id: 62, cat: TV/SD, desc: "SD Boxset"}
@@ -140,26 +143,24 @@ search:
     date_day:
       # Danas<br>08:10 AM
       # Juče<br>06:44 PM
-      optional: true
       selector: td:nth-of-type(6):contains("Danas"), td:nth-of-type(6):contains("Juče")
+      # auto adjusted by site account profile
+      optional: true
       filters:
         - name: replace
           args: ["Danas", "Today"]
         - name: replace
           args: ["Juče", "Yesterday"]
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
     date_year:
       # Feb 14 2019<br>10:20 AM
-      optional: true
       selector: td:nth-of-type(6):not(:contains("Juče")):not(:contains("Danas"))
+      # auto adjusted by site account profile
+      optional: true
       filters:
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
         - name: dateparse
-          args: "Jan 2 2006 03:04 PM -07:00"
+          args: "MMM d yyyy hh:mm tt"
     date:
-      text: "{{ if or .Result.date_year .Result.date_day }}{{ or .Result.date_year .Result.date_day }}{{ else }}now{{ end }}"
+      text: "{{ if or .Result.date_day .Result.date_year }}{{ or .Result.date_day .Result.date_year }}{{ else }}now{{ end }}"
     size:
       selector: td:nth-of-type(7)
     grabs:

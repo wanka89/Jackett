@@ -12,6 +12,8 @@ legacylinks:
 
 caps:
   categorymappings:
+    - {id: 82, cat: TV/Sport, desc: "AEW Collision"}
+    - {id: 83, cat: TV/Sport, desc: "AEW Collision HD"}
     - {id: 74, cat: TV/Sport, desc: "AEW Dynamite"}
     - {id: 75, cat: TV/Sport, desc: "AEW Dynamite HD"}
     - {id: 78, cat: TV/Sport, desc: "AEW PPV's"}
@@ -103,6 +105,8 @@ settings:
     options:
       desc: desc
       asc: asc
+  - name: info_flaresolverr
+    type: info_flaresolverr
 
 login:
   path: takelogin.php
@@ -141,12 +145,22 @@ search:
       filters:
         - name: querystring
           args: cat
-    title:
-      selector: a[href^="details.php?id="]
-      attribute: title
     download_1:
       selector: a[href^="download.php"]
       attribute: href
+    title_default:
+      # title can be missing so we use the &name= from the DL as a standby
+      text: "{{ .Result.download_1 }}"
+      filters:
+        - name: querystring
+          args: name
+        - name: replace
+          args: [".torrent", ""]
+    title:
+      selector: a[href^="details.php?id="]
+      attribute: title
+      optional: true
+      default: "{{ .Result.title_default }}"
     download_2:
       selector: a[href^="download2.php"]
       attribute: href
@@ -171,7 +185,7 @@ search:
         - name: append
           args: " -07:00" # PDT
         - name: dateparse
-          args: "2006-01-0215:04:05 -07:00"
+          args: "yyyy-MM-ddHH:mm:ss zzz"
     downloadvolumefactor:
       case:
         img[src="pic/freeleech.png"]: 0

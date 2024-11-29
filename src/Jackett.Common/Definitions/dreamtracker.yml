@@ -1,7 +1,7 @@
 ---
 id: dreamtracker
 name: Dream Tracker
-description: "Dream Tracker is a GREEK Private tracker for TV / MOVIES / GENERAL"
+description: "Dream Tracker is a Subscription only GREEK Private tracker for TV / MOVIES / GENERAL"
 language: en-US
 type: private
 encoding: UTF-8
@@ -14,6 +14,10 @@ caps:
     - {id: 113, cat: TV/Anime, desc: "Anime"}
     - {id: 114, cat: TV/Anime, desc: "Anime Series"}
     - {id: 115, cat: Movies/Other, desc: "Anime Movies"}
+    # VIP
+    - {id: 122, cat: Other, desc: "Only VIP"}
+    - {id: 123, cat: Audio, desc: "VIP Music"}
+    - {id: 124, cat: Movies, desc: "VIP Movies"}
     # Kids Stuff
     - {id: 1, cat: Movies/Other, desc: "Kids Stuff"}
     - {id: 14, cat: Movies/Other, desc: "Cartoon No Subs"}
@@ -58,6 +62,7 @@ caps:
     - {id: 59, cat: TV, desc: "Tv Shows & Series"}
     - {id: 62, cat: TV/Foreign, desc: "Tv Shows Foreign"}
     - {id: 63, cat: TV, desc: "Tv Shows Greek"}
+    - {id: 126, cat: TV/Foreign, desc: "Mini Series Foreign"}
     - {id: 64, cat: TV/Foreign, desc: "Series Foreign"}
     - {id: 65, cat: TV, desc: "Series Greek"}
     - {id: 92, cat: TV/Foreign, desc: "Series Foreign Packs"}
@@ -101,6 +106,10 @@ caps:
     book-search: [q]
 
 settings:
+  - name: info_vip
+    type: info
+    label: VIP
+    default: "On 1st March 2024 this site became VIP only. You will not be able to access the Torrents page with this indexer if you do not have a subscription membership."
   - name: username
     type: text
     label: Username
@@ -114,7 +123,7 @@ settings:
   - name: info
     type: info
     label: Layout
-    default: "<ol><li>Only the English Classic profile is supported.<li>Make sure to set the <b>Torrent Listing</b> option in your profile to <b>Classic</b><li>And set the <b>Language</b> to <b>English</b><li>Using the <i>Modern</i> theme will prevent results, and using <i>Greek</i> will prevent upload dates.</ol>"
+    default: "<ul><li>Only the English Classic profile is supported.</li><li>Make sure to set the <b>Torrent Listing</b> option in your profile to <b>Classic</b></li><li>And set the <b>Language</b> to <b>English</b></li><li>Using the <i>Modern</i> theme will prevent results, and using <i>Greek</i> will prevent upload dates.</li></ul>"
 
 login:
   path: ?p=home&pid=1
@@ -167,34 +176,34 @@ search:
     download:
       selector: a[href*="?p=torrents&pid=10&action=download"]
       attribute: href
-    date_year:
-      # Uploaded 30-01-2019 15:02 by
-      selector: td.torrent_name:not(:contains(" at ")):not(:has(abbr[data-time]))
-      optional: true
-      filters:
-        - name: regexp
-          args: "Uploaded (.+?) by"
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
-        - name: dateparse
-          args: "02-01-2006 15:04 -07:00"
     date_day:
       # Uploaded Friday at 05:11 by
       # Uploaded Today at 00:48 by
       # Uploaded Yesterday at 23:57 by
       selector: td.torrent_name:contains(" at "):not(:has(abbr[data-time]))
+      # auto adjusted by site account profile
       optional: true
       filters:
         - name: regexp
           args: "Uploaded (.+?) by"
         - name: fuzzytime
+    date_year:
+      # Uploaded 30-01-2019 15:02 by
+      selector: td.torrent_name:not(:contains(" at ")):not(:has(abbr[data-time]))
+      # auto adjusted by site account profile
+      optional: true
+      filters:
+        - name: regexp
+          args: "Uploaded (.+?) by"
+        - name: dateparse
+          args: "dd-MM-yyyy HH:mm"
     date_unix:
       # within the hour (unix)
       selector: abbr[data-time]
       attribute: data-time
       optional: true
     date:
-      text: "{{ if or .Result.date_year .Result.date_unix .Result.date_day }}{{ or .Result.date_year .Result.date_unix .Result.date_day }}{{ else }}now{{ end }}"
+      text: "{{ if or .Result.date_day .Result.date_year .Result.date_unix }}{{ or .Result.date_day .Result.date_year .Result.date_unix }}{{ else }}now{{ end }}"
     size:
       selector: a[rel="torrent_size"]
     seeders:
@@ -215,4 +224,9 @@ search:
       case:
         "img[src$=\"/torrent_multiple_upload.png\"]": 2
         "*": 1
+    minimumseedtime:
+      # 110 hours  (as seconds = 110 x 60 x 60)
+      text: 396000
+    minimumratio:
+      text: 1.0
 # TSUE 2.2

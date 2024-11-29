@@ -142,6 +142,13 @@ search:
     poster:
       selector: a[href*="data/torrents/torrent_images/"]
       attribute: href
+    genre:
+      selector: div.torrentDetails > div:has(a[href*="&genre="])
+      filters:
+        - name: replace
+          args: ["Genre:", ""]
+    description:
+      text: "{{ .Result.genre }}"
     size:
       selector: a[rel="torrent_size"]
     grabs:
@@ -150,31 +157,29 @@ search:
       selector: a[rel="torrent_seeders"]
     leechers:
       selector: a[rel="torrent_leechers"]
-    date_time:
-      selector: div.torrentOwner abbr
-      optional: true
-      attribute: data-time
     date_day:
       selector: div.torrentOwner:contains("day")
+      # auto adjusted by site account profile
       optional: true
       filters:
         - name: regexp
           args: "Uploaded (.+?) by"
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
         - name: fuzzytime
     date_year:
       selector: div.torrentOwner:contains("-")
+      # auto adjusted by site account profile
       optional: true
       filters:
         - name: regexp
           args: "Uploaded (.+?) by"
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
         - name: dateparse
-          args: "02-01-2006 15:04 -07:00"
+          args: "dd-MM-yyyy HH:mm"
+    date_unix:
+      selector: div.torrentOwner abbr
+      optional: true
+      attribute: data-time
     date:
-      text: "{{ if or .Result.date_time .Result.date_year .Result.date_day }}{{ or .Result.date_time .Result.date_year .Result.date_day }}{{ else }}now{{ end }}"
+      text: "{{ if or .Result.date_day .Result.date_year .Result.date_unix }}{{ or .Result.date_day .Result.date_year .Result.date_unix }}{{ else }}now{{ end }}"
     downloadvolumefactor:
       case:
         img[src$="/torrent_free.png"]: 0
@@ -182,5 +187,5 @@ search:
     uploadvolumefactor:
       text: 1
     minimumratio:
-      text: 1.0
+      text: 0.5
 # TSUE 2.2

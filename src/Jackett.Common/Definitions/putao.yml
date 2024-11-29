@@ -1,7 +1,7 @@
 ---
 id: putao
-name: PuTao
-description: "葡萄 (PuTao) is a CHINESE Private Torrent Tracker for MOVIES / TV / GENERAL"
+name: PuTao (葡萄)
+description: "PuTao (葡萄) is a CHINESE Private Torrent Tracker for MOVIES / TV / GENERAL"
 language: zh-CN
 type: private
 encoding: UTF-8
@@ -51,18 +51,10 @@ settings:
   - name: password
     type: password
     label: Password
-  - name: info_captcha
-    type: info
-    label: About the Captcha
-    default: If the Captcha image is missing then set the <b>checkcode</b> to <b>XxXx</b>
   - name: freeleech
     type: checkbox
     label: Search freeleech only
     default: false
-  - name: info_tpp
-    type: info
-    label: Results Per Page
-    default: For best results, change the <b>每页种子数:每页显示</b><i>(Torrents per page:)</i> setting to <b>100</b> on your account profile.
   - name: sort
     type: select
     label: Sort requested from site
@@ -79,18 +71,23 @@ settings:
     options:
       desc: desc
       asc: asc
+  - name: info_tpp
+    type: info
+    label: Results Per Page
+    default: For best results, change the <b>每页种子数:每页显示</b><i>(Torrents per page:)</i> setting to <b>100</b> on your account profile.
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "Account retention rules:<ol><li>Veteran User and above will be retained forever</li><li>Elite User and above will not have their account deleted after parking (in the control panel)</li><li>Users with a parked account will be deleted if they do not log in for 240 consecutive days</li><li>Users with a non-parked account will be deleted if they do not log in for 120 consecutive days</li><li>Users who have no traffic (i.e. upload/download data are both 0) will be deleted if they do not log in for 30 consecutive days.</li></ol>"
 
 login:
   path: login.php
   method: form
   form: form[action="takelogin.php"]
-  captcha:
-    type: image
-    selector: img[src^="getcheckcode.php?"]
-    input: checkcode
   inputs:
     username: "{{ .Config.username }}"
     password: "{{ .Config.password }}"
+    checkcode: XxXx
     logout: ""
   error:
     - selector: td.embedded:has(h2:contains("失败"))
@@ -103,7 +100,8 @@ search:
     - path: torrents.php
   inputs:
     $raw: "{{ range .Categories }}cat{{.}}=1&{{end}}"
-    search: "{{ if .Query.IMDBID }}{{ .Query.IMDBID }}{{ else }}{{ end }}{{ if .Query.DoubanID }}/{{ .Query.DoubanID }}{{ else }}{{ end }}{{ if or .Query.IMDBID .Query.DoubanID }}{{ else }}{{ .Keywords }}{{ end }}"
+    # currently supports only one query id at one time.
+    search: "{{ if .Query.IMDBID }}{{ .Query.IMDBID }}{{ else }}{{ end }}{{ if or .Query.IMDBID .Query.DoubanID }} {{ else }}{{ .Keywords }}{{ end }}{{ if .Query.DoubanID }}{{ .Query.DoubanID }}{{ else }}{{ end }}"
     # 0 incldead, 1 onlyactive, 2 onlydead
     incldead: 0
     # 0 all, 1 normal, 2 free, 3 2x, 4 2xfree, 5 50%, 6 30%, 7 70%
@@ -116,7 +114,8 @@ search:
     search_mode: 0
     sort: "{{ .Config.sort }}"
     type: "{{ .Config.type }}"
-    # does not return imdb or dubanid in results
+    notnewword: 1
+    # does not return imdb or doubanid in results
 
   rows:
     selector: table.torrents > tbody > tr:has(table.torrentname)
@@ -130,12 +129,11 @@ search:
           args: cat
     title_default:
       selector: a[href^="details.php?id="]
-    title_optional:
-      optional: true
+    title:
       selector: a[title][href^="details.php?id="]
       attribute: title
-    title:
-      text: "{{ if .Result.title_optional }}{{ .Result.title_optional }}{{ else }}{{ .Result.title_default }}{{ end }}"
+      optional: true
+      default: "{{ .Result.title_default }}"
     details:
       selector: a[href^="details.php?id="]
       attribute: href
@@ -170,7 +168,7 @@ search:
         - name: append
           args: " +08:00" # CST
         - name: dateparse
-          args: "2006-01-0215:04:05 -07:00"
+          args: "yyyy-MM-ddHH:mm:ss zzz"
     date:
       text: "{{ if or .Result.date_elapsed .Result.date_added }}{{ or .Result.date_elapsed .Result.date_added }}{{ else }}now{{ end }}"
     size:
@@ -195,9 +193,9 @@ search:
         img.pro_2up: 2
         img.pro_free2up: 2
         "*": 1
-    description:
-      selector: td:nth-child(2)
-      remove: a, img
     minimumratio:
       text: 0.7
+    description:
+      selector: td:nth-child(2)
+      remove: a, b, font, img, span
 # NexusPHP Standard v1.0 Beta 2

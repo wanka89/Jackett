@@ -95,6 +95,10 @@ settings:
     type: info
     label: About login error
     default: If you get a <b>Login Failed, got redirected.</b> error during your config <i>save</i> then most likely you have used an incorrect username or password.
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "<ol><li>Users who have not accessed the site for 180 days will be deleted!</li><li>If the vacation mode is set, the system will not delete the given user for 365 days.</li></ol>"
 
 login:
   path: takelogin.php
@@ -102,6 +106,8 @@ login:
   inputs:
     username: "{{ .Config.username }}"
     password: "{{ .Config.password }}"
+  error:
+    - selector: :root:contains("Sikertelen bejelentkezés")
   test:
     path: index.php
     selector: a[href^="logout.php?c="]
@@ -123,25 +129,24 @@ search:
       - name: andmatch
 
   fields:
-    category:
-      text: 38
-    category|noappend:
+    category_optional:
       selector: a[href^="browse.php?cat="]
       attribute: href
       optional: true
       filters:
         - name: querystring
           args: cat
+    category:
+      text: "{{ if .Result.category_optional }}{{ .Result.category_optional }}{{ else }}38{{ end }}"
     title_default:
       # can be abbreviated
       selector: a[href^="details.php?id="]
-    title_optional:
+    title:
       # usually full length
       selector: a[href^="details.php?id="]
       attribute: title
       optional: true
-    title:
-      text: "{{ if .Result.title_optional }}{{ .Result.title_optional }}{{ else }}{{ .Result.title_default }}{{ end }}"
+      default: "{{ .Result.title_default }}"
     details:
       selector: a[href^="details.php?id="]
       attribute: href
@@ -169,7 +174,7 @@ search:
         - name: replace
           args: ["\xA0", " "]
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     files:
       selector: td:nth-child(5)
     size:
@@ -183,6 +188,10 @@ search:
       selector: td:nth-child(8)
     leechers:
       selector: td:nth-child(9)
+    description:
+      case:
+        img[src="pic/yes.png"]: Verified
+        img[src="pic/nincs.png"]: Unverified
     downloadvolumefactor:
       case:
         img[src="pic/free.png"]: 0

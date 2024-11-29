@@ -35,6 +35,7 @@ caps:
     - {id: 39, cat: TV, desc: "Netflix Film"}
     - {id: 38, cat: TV, desc: "Netflix Dizi"}
     - {id: 40, cat: TV, desc: "Netflix Belgesel"}
+    - {id: 104, cat: TV, desc: "Netflix Reality/Yarışma"}
     - {id: 47, cat: PC, desc: "Programlar"}
     - {id: 48, cat: PC, desc: "Programlar Windows"}
     - {id: 96, cat: PC, desc: "Programlar Linux"}
@@ -43,13 +44,14 @@ caps:
     - {id: 83, cat: TV, desc: "Dijital Platform"}
     - {id: 86, cat: TV, desc: "Dijital Platform AMAZON"}
     - {id: 102, cat: TV, desc: "Dijital Platform ATVP"}
-    - {id: 85, cat: TV, desc: "Dijital Platform BEiN"}
+    - {id: 85, cat: TV, desc: "Dijital Platform BEiN/TOD"}
     - {id: 84, cat: TV, desc: "Dijital Platform BluTV"}
     - {id: 98, cat: TV, desc: "Dijital Platform DSNP"}
     - {id: 77, cat: TV, desc: "Dijital Platform EXXEN"}
     - {id: 87, cat: TV, desc: "Dijital Platform GAIN"}
     - {id: 88, cat: TV, desc: "Dijital Platform TV+"}
     - {id: 101, cat: TV, desc: "Dijital Platform MUBi"}
+    - {id: 103, cat: TV, desc: "Dijital Platform TABii"}
     - {id: 89, cat: TV, desc: "Dijital Platform Diger"}
     - {id: 31, cat: TV, desc: "Dizi"}
     - {id: 32, cat: TV, desc: "Dizi Yerli"}
@@ -62,6 +64,8 @@ caps:
     - {id: 2, cat: Console, desc: "Oyun"}
     - {id: 46, cat: Console, desc: "Oyun PC"}
     - {id: 16, cat: Console, desc: "Oyun Konsol"}
+    - {id: 57, cat: Other, desc: "VIP"}
+    - {id: 66, cat: Other, desc: "VIP Vip"}
 
   modes:
     search: [q]
@@ -75,13 +79,16 @@ settings:
     type: text
     label: Cookie
   - name: info_cookie
-    type: info
-    label: How to get the Cookie
-    default: "<ol><li>Login to this tracker with your browser<li>Open the <b>DevTools</b> panel by pressing <b>F12</b><li>Select the <b>Network</b> tab<li>Click on the <b>Doc</b> button (Chrome Browser) or <b>HTML</b> button (FireFox)<li>Refresh the page by pressing <b>F5</b><li>Click on the first row entry<li>Select the <b>Headers</b> tab on the Right panel<li>Find <b>'cookie:'</b> in the <b>Request Headers</b> section<li><b>Select</b> and <b>Copy</b> the whole cookie string <i>(everything after 'cookie: ')</i> and <b>Paste</b> here.</ol>"
+    type: info_cookie
+  - name: useragent
+    type: text
+    label: User-Agent
+  - name: info_useragent
+    type: info_useragent
   - name: info_profile
     type: info
     label: Layout
-    default: "<ol><li>Only the English Classic profile is supported.<li>Make sure to set the <b>Torrent Listing (Listeleme Biçimi)</b> option in your profile to <b>Classic (Klasik)</b><li>And set the <b>Language (Dil)</b> to <b>English</b><li>Using the <i>Modern</i> theme will prevent results, and using <i>Turkish</i> will prevent upload dates.</ol>"
+    default: "<ul><li>Only the English Classic profile is supported.</li><li>Make sure to set the <b>Torrent Listing (Listeleme Biçimi)</b> option in your profile to <b>Classic (Klasik)</b></li><li>And set the <b>Language (Dil)</b> to <b>English</b></li><li>Using the <i>Modern</i> theme will prevent results, and using <i>Turkish</i> will prevent upload dates.</li></ul>"
   - name: freeleech
     type: checkbox
     label: Filter freeleech only
@@ -103,6 +110,7 @@ settings:
       asc: asc
 
 login:
+  # using cookie method because login page has embedded hCaptcha
   method: cookie
   inputs:
     cookie: "{{ .Config.cookie }}"
@@ -111,6 +119,8 @@ login:
     selector: div#member_info_bar
 
 search:
+  headers:
+    User-Agent: ["{{ .Config.useragent }}"]
   paths:
     - path: /
   inputs:
@@ -122,6 +132,10 @@ search:
     search_type: name
     "sortOptions[sortBy]": "{{ .Config.sort }}"
     "sortOptions[sortOrder]": "{{ .Config.type }}"
+
+  keywordsfilters:
+    - name: re_replace
+      args: ["\\b(\\d{4})\\.(\\d{2})\\.(\\d{2})\\b", "$3.$2.$1"]
 
   rows:
     selector: "table#torrents_table_classic > tbody > tr:has(td.torrent_name){{ if .Config.freeleech }}:has(img[src$=\"/freedownload.gif\"]){{ else }}{{ end }}"
@@ -135,37 +149,40 @@ search:
           args: cid
     title:
       selector: a[href*="?p=torrents&pid=10&action=details"]
+      filters:
+        - name: re_replace
+          args: ["\\b(\\d{2})\\.(\\d{2})\\.(\\d{4})\\b", "$3.$2.$1"]
     details:
       selector: a[href*="?p=torrents&pid=10&action=details"]
       attribute: href
-    date_year:
-      # Uploaded 30-01-2019 15:02 by
-      selector: td.torrent_name:not(:contains(" at ")):not(:has(abbr[data-time]))
-      optional: true
-      filters:
-        - name: regexp
-          args: "Uploaded (.+?) by"
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
-        - name: dateparse
-          args: "02-01-2006 15:04 -07:00"
     date_day:
       # Uploaded Friday at 05:11 by
       # Uploaded Today at 00:48 by
       # Uploaded Yesterday at 23:57 by
       selector: td.torrent_name:contains(" at "):not(:has(abbr[data-time]))
+      # auto adjusted by site account profile
       optional: true
       filters:
         - name: regexp
           args: "Uploaded (.+?) by"
         - name: fuzzytime
+    date_year:
+      # Uploaded 30-01-2019 15:02 by
+      selector: td.torrent_name:not(:contains(" at ")):not(:has(abbr[data-time]))
+      # auto adjusted by site account profile
+      optional: true
+      filters:
+        - name: regexp
+          args: "Uploaded (.+?) by"
+        - name: dateparse
+          args: "dd-MM-yyyy HH:mm"
     date_unix:
       # within the hour (unix)
       selector: abbr[data-time]
       attribute: data-time
       optional: true
     date:
-      text: "{{ if or .Result.date_year .Result.date_unix .Result.date_day }}{{ or .Result.date_year .Result.date_unix .Result.date_day }}{{ else }}now{{ end }}"
+      text: "{{ if or .Result.date_day .Result.date_year .Result.date_unix }}{{ or .Result.date_day .Result.date_year .Result.date_unix }}{{ else }}now{{ end }}"
     download:
       selector: a[href*="?p=torrents&pid=10&action=download"]
       attribute: href
@@ -195,4 +212,7 @@ search:
         "*": 1
     minimumratio:
       text: 0.5
+    minimumseedtime:
+      # 3 days (as seconds = 3 x 24 x 60 x 60)
+      text: 259200
 # TSUE 2.2

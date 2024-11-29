@@ -83,6 +83,10 @@ settings:
     type: info
     label: Results Per Page
     default: For best results, change the <b>Torrents per page:</b> setting to <b>100</b> on your account profile.
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "Inactive users registered more than 6 weeks ago with a low ratio (below 0.4) will be deleted after a while. The conditions for the actual cancellation are always decided by the Staff."
 
 login:
   path: takelogin.php
@@ -154,7 +158,7 @@ search:
         - name: append
           args: " +01:00" # CET
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     size:
       selector: td:nth-last-child(5) > u
     grabs:
@@ -177,7 +181,9 @@ search:
         - name: regexp
           args: "\\((.+?)\\)"
     description:
-      text: "{{ .Result.genre }}"
+      case:
+        img[src="pic/yes.gif"]: "Verified: {{ .Result.genre }}"
+        "*": "Unverified: {{ .Result.genre }}"
     minimumratio:
       text: 1.0
     minimumseedtime:

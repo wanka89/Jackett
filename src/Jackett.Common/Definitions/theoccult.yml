@@ -71,14 +71,8 @@ settings:
   - name: cookie
     type: text
     label: Cookie
-  - name: info
-    type: info
-    label: How to get the Cookie
-    default: "<ol><li>Login to this tracker with your browser<li>Open the <b>DevTools</b> panel by pressing <b>F12</b><li>Select the <b>Network</b> tab<li>Click on the <b>Doc</b> button (Chrome Browser) or <b>HTML</b> button (FireFox)<li>Refresh the page by pressing <b>F5</b><li>Click on the first row entry<li>Select the <b>Headers</b> tab on the Right panel<li>Find <b>'cookie:'</b> in the <b>Request Headers</b> section<li><b>Select</b> and <b>Copy</b> the whole cookie string <i>(everything after 'cookie: ')</i> and <b>Paste</b> here.</ol>"
-  - name: freeleech
-    type: checkbox
-    label: Search freeleech only
-    default: false
+  - name: info_cookie
+    type: info_cookie
   - name: sort
     type: select
     label: Sort requested from site
@@ -99,8 +93,17 @@ settings:
     type: info
     label: Results Per Page
     default: For best results, change the <b>Torrents per page:</b> setting to <b>100</b> on your account profile.
+  - name: info_tcg
+    type: info
+    label: Message from the TCG staff
+    default: We wish to encourage all members to participate in the communities we are creating. We have worked with the Jackett maintainers to ensure that the security and longevity of our trackers continues, and as such some torrents are removed from the results in Jackett.
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "Unparked accounts that haven't visited (read: browsed) the site for 38 days (and are over 28 days old) are pruned. Parked accounts are pruned when 112 days have elapsed since the last recorded activity (read: browsed). Seeding activity does NOT count, you must BROWSE the site. Donators with a star (and ONLY donators with a star) are immune to auto-pruning. Power Users and above are also immune. We regularly clean out accounts with very low share ratios that are subject to the Ratio Watch system."
 
 login:
+  # using cookie method because login page has embedded hCaptcha
   method: cookie
   inputs:
     cookie: "{{ .Config.cookie }}"
@@ -114,14 +117,16 @@ search:
   inputs:
     $raw: "{{ range .Categories }}filter_cat[{{.}}]=1&{{end}}"
     search: "{{ .Keywords }}"
-    # 0 active, 1 incldead, 2 onlydead, 3 free, 4 exclusive, 5 neutral
-    incldead: "{{ if .Config.freeleech }}3{{ else }}1{{ end }}"
+    # 0 active, 1 incldead, 2 onlydead, 3 free (not used by request), 4 exclusive, 5 neutral
+    incldead: 1
     titleonly: 1
     # 0 Exact, 1 Fuzzy, 3 Parsed, 4 Simple # 2 Pure is not used
     nonboolean: 0
+    sort: "{{ .Config.sort }}"
+    d: "{{ .Config.type }}"
 
   rows:
-    selector: table[border="0"] > tbody > tr.ttable:has(a[href^="browse.php?cat="])
+    selector: table[border="0"] > tbody > tr.ttable:has(a[href^="browse.php?cat="]):not(:has(font[color="blue"])):not(:contains("*TCG*"))
 
   fields:
     category:
@@ -143,11 +148,10 @@ search:
       selector: td:nth-child(4)
     date:
       selector: td:nth-child(6)
+      # auto adjusted by site account profile
       filters:
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
         - name: dateparse
-          args: "2006-01-0215:04:05 -07:00"
+          args: "yyyy-MM-ddHH:mm:ss"
     size:
       selector: td:nth-child(7)
     grabs:
@@ -162,7 +166,6 @@ search:
     downloadvolumefactor:
       case:
         "font[color=\"green\"]": 0
-        "font[color=\"blue\"]": 0
         "*": 1
     uploadvolumefactor:
       case:

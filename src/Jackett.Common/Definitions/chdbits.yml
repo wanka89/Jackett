@@ -7,6 +7,7 @@ type: private
 encoding: UTF-8
 links:
   - https://chdbits.co/
+  - https://ptchdbits.co/
 
 caps:
   categorymappings:
@@ -38,6 +39,8 @@ settings:
     type: checkbox
     label: Search freeleech only
     default: false
+  - name: info_flaresolverr
+    type: info_flaresolverr
   - name: info_tpp
     type: info
     label: Results Per Page
@@ -60,8 +63,13 @@ settings:
       asc: asc
 
 login:
-  path: takelogin.php
-  method: post
+  path: login.php
+  method: form
+  form: form[action="takelogin.php"]
+  captcha:
+    type: image
+    selector: img[alt="CAPTCHA"]
+    input: imagestring
   inputs:
     username: "{{ .Config.username }}"
     password: "{{ .Config.password }}"
@@ -74,6 +82,12 @@ login:
     - selector: td.embedded:has(h2:contains("failed"))
   test:
     path: torrents.php
+    selector: a[href*="logout.php"]
+
+download:
+  selectors:
+    - selector: a[href^="download.php?id="]
+      attribute: href
 
 search:
   paths:
@@ -90,6 +104,7 @@ search:
     search_mode: 0
     sort: "{{ .Config.sort }}"
     type: "{{ .Config.type }}"
+    notnewword: 1
 
   rows:
     selector: table.torrents > tbody > tr:has(table.torrentname)
@@ -103,47 +118,46 @@ search:
           args: cat
     title_default:
       selector: a[href^="details.php?id="]
-    title_optional:
-      optional: true
+    title:
       selector: a[title][href^="details.php?id="]
       attribute: title
-    title:
-      text: "{{ if .Result.title_optional }}{{ .Result.title_optional }}{{ else }}{{ .Result.title_default }}{{ end }}"
+      optional: true
+      default: "{{ .Result.title_default }}"
     details:
       selector: a[href^="details.php?id="]
       attribute: href
     download:
-      selector: a[href^="download.php?id="]
+      selector: a[href^="details.php?id="]
       attribute: href
-    size:
-      selector: td:nth-child(5)
-    grabs:
-      selector: td:nth-child(8)
-    seeders:
-      selector: td:nth-child(6)
-    leechers:
-      selector: td:nth-child(7)
     date_elapsed:
       # time type: time elapsed (default)
-      selector: td:nth-child(4) > span[title]
+      selector: td.rowfollow:nth-last-child(7) > span[title]
       attribute: title
       optional: true
       filters:
         - name: append
           args: " +08:00" # CST
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     date_added:
       # time added
-      selector: td:nth-child(4):not(:has(span))
+      selector: td.rowfollow:nth-last-child(7):not(:has(span))
       optional: true
       filters:
         - name: append
           args: " +08:00" # CST
         - name: dateparse
-          args: "2006-01-0215:04:05 -07:00"
+          args: "yyyy-MM-ddHH:mm:ss zzz"
     date:
       text: "{{ if or .Result.date_elapsed .Result.date_added }}{{ or .Result.date_elapsed .Result.date_added }}{{ else }}now{{ end }}"
+    size:
+      selector: td.rowfollow:nth-last-child(6)
+    seeders:
+      selector: td.rowfollow:nth-last-child(5)
+    leechers:
+      selector: td.rowfollow:nth-last-child(4)
+    grabs:
+      selector: td.rowfollow:nth-last-child(3)
     downloadvolumefactor:
       case:
         img.pro_free: 0
@@ -160,5 +174,5 @@ search:
         "*": 1
     description:
       selector: td:nth-child(2)
-      remove: a, img
-# NexusPHP Standard v1.5 Beta 4
+      remove: a, b, font, img, span
+# NexusPHP Standard v1.5 Beta 4 (customised)

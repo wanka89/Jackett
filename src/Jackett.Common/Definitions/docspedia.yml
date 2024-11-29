@@ -11,25 +11,37 @@ links:
 caps:
   categorymappings:
     - {id: 77, cat: PC, desc: "3D Models"}
+    - {id: 83, cat: Books/EBook, desc: "Action/Adventure"}
+    - {id: 84, cat: Books/EBook, desc: "Art"}
     - {id: 65, cat: Audio, desc: "Audio"}
+    - {id: 85, cat: Books/EBook, desc: "Biographical"}
     - {id: 64, cat: Books/EBook, desc: "Books"}
     - {id: 66, cat: Books, desc: "Business"}
     - {id: 68, cat: Books/Comics, desc: "Comics"}
     - {id: 80, cat: Books, desc: "Coooking"}
+    - {id: 86, cat: Books/EBook, desc: "Crafts"}
+    - {id: 92, cat: Books/EBook, desc: "Crime/Thriller"}
     - {id: 59, cat: TV/Documentary, desc: "Docs/Movies"}
     - {id: 60, cat: TV/Documentary, desc: "Docs/TV"}
     - {id: 79, cat: TV, desc: "Educational"}
+    - {id: 93, cat: Books/EBook, desc: "Fantasy"}
     - {id: 71, cat: Other, desc: "Fonts"}
+    - {id: 82, cat: Books/EBook, desc: "History"}
+    - {id: 87, cat: Books/EBook, desc: "Horror"}
     - {id: 72, cat: Books, desc: "IT Books"}
     - {id: 57, cat: Books/Mags, desc: "Magazine"}
+    - {id: 88, cat: Books/EBook, desc: "Math/Science/Tech"}
     - {id: 58, cat: Books, desc: "Medicine"}
     - {id: 70, cat: Books/EBook, desc: "Occult"}
+    - {id: 81, cat: Books/EBook, desc: "Photography"}
     - {id: 74, cat: Audio, desc: "Podcasts"}
     - {id: 69, cat: Other, desc: "PS Resources"}
+    - {id: 91, cat: Books/EBook, desc: "Romance"}
+    - {id: 89, cat: Books/EBook, desc: "Scinece Fiction"}
     - {id: 76, cat: Books, desc: "Self-Help"}
     - {id: 56, cat: TV/Sport, desc: "Sports"}
+    - {id: 90, cat: Books/EBook, desc: "Travel"}
     - {id: 61, cat: Other, desc: "Tutorials"}
-    - {id: 81, cat: Books, desc: "Wordpress"}
 
   modes:
     search: [q]
@@ -68,6 +80,10 @@ settings:
     type: info
     label: Results Per Page
     default: For best results, change the <b>Torrents per page:</b> setting to <b>100</b> on your account profile.
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "Accounts without activity in the first 28 days will be deleted automatically by the system."
 
 login:
   path: login.php
@@ -139,22 +155,22 @@ search:
         "*": 1
     uploadvolumefactor:
       text: 1
-    date_year:
-      remove: a
-      # Jul 4 2019 08:04 AM
-      selector: div.torrenttable:nth-child(2):not(:contains("day"))
-      optional: true
-      filters:
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
-        - name: dateparse
-          args: "Jan 2 2006 03:04 PM -07:00"
     date_day:
       remove: a
       # Today 02:40 PM
       # Yesterday 09:10 AM
       selector: div.torrenttable:nth-child(2):contains("day")
+      # auto adjusted by site account profile
       optional: true
+    date_year:
+      remove: a
+      # Jul 4 2019 08:04 AM
+      selector: div.torrenttable:nth-child(2):not(:contains("day"))
+      # auto adjusted by site account profile
+      optional: true
+      filters:
+        - name: dateparse
+          args: "MMM d yyyy hh:mm tt"
     date:
       text: "{{ if or .Result.date_day .Result.date_year }}{{ or .Result.date_day .Result.date_year }}{{ else }}now{{ end }}"
     minimumratio:

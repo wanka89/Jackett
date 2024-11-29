@@ -24,7 +24,7 @@ if systemctl is-active --quiet "${JACKETT_SERVICE}"; then
     if systemctl stop "${JACKETT_SERVICE}"; then
         echo "Service '${JACKETT_SERVICE}' stopped"
     else
-        echo "${BOLDRED}ERROR${NC}: The service '${JACKETT_SERVICE}' Can not be stopped"
+        echo "${BOLDRED}ERROR${NC}: The service '${JACKETT_SERVICE}' can not be stopped"
         exit 1
     fi
 
@@ -73,6 +73,7 @@ Type=simple
 User=${JACKETT_USER}
 Group=${JACKETT_USER}
 WorkingDirectory=${JACKETT_DIR}
+Environment="DOTNET_EnableDiagnostics=0"
 ExecStart=/bin/sh "${JACKETT_DIR}/jackett_launcher.sh"
 TimeoutStopSec=30
 

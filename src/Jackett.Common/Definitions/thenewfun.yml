@@ -18,10 +18,11 @@ caps:
     - {id: 140, cat: TV/Documentary, desc: "Doku - SD"}
     - {id: 142, cat: TV/Documentary, desc: "Doku - Sonstige"}
     - {id: 120, cat: Books, desc: "Ebook"}
+    - {id: 135, cat: Movies/UHD, desc: "Filme - 2160p"}
     - {id: 131, cat: TV/Anime, desc: "Filme - Animie"}
     - {id: 101, cat: Movies/BluRay, desc: "Filme - Blue Ray"}
     - {id: 102, cat: Movies/Other, desc: "Filme - Bollywood"}
-    - {id: 103, cat: Movies/DVD, desc: "Filme - DVD"}
+    - {id: 149, cat: Movies/DVD, desc: "Filme - DVD"}
     - {id: 104, cat: Movies/DVD, desc: "Filme - DVD-R"}
     - {id: 135, cat: Movies/HD, desc: "Filme - HD"}
     - {id: 130, cat: Movies, desc: "Filme - Klassiker"}
@@ -75,7 +76,7 @@ settings:
   - name: info_free
     type: info
     label: About OnlyUpload at T-N-F
-    default: <li>OnlyUpload are torrents where download is not counted but upload is. Good for building your Ratio up. (On the Jackett dashboard search results these are tagged as Freeleech).</li>
+    default: "<ul><li>OnlyUpload are torrents where download is not counted but upload is. Good for building your Ratio up. (On the Jackett dashboard search results these are tagged as Freeleech).</li></ul>"
   - name: sort
     type: select
     label: Sort requested from site
@@ -96,6 +97,10 @@ settings:
     type: info
     label: Results Per Page
     default: For best results, change the <b>Torrents pro Seite:</b> setting to <b>100</b> on your Control Panel. The default is <i>15</i>.
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "Inactive accounts are automatically deleted after 42 days and leechers are also kicked."
 
 login:
   path: takelogin.php
@@ -161,7 +166,7 @@ search:
         - name: replace
           args: ["\xA0", " "]
         - name: dateparse
-          args: "02.01.2006 15:04:05 -07:00"
+          args: "dd.MM.yyyy HH:mm:ss zzz"
     downloadvolumefactor:
       case:
         img[src="pic/oupic.gif"]: 0 # only upload is counted
@@ -175,4 +180,4 @@ search:
     minimumseedtime:
       # 2 days (as seconds = 2 x 24 x 60 x 60)
       text: 172800
-# engine n/a
+# NetVision

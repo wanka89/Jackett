@@ -2,23 +2,36 @@
 name: $(majorVersion).$(minorVersion).$(patchVersion)
 variables:
   majorVersion: 0
-  minorVersion: 20
+  minorVersion: 22
   patchVersion: $[counter(variables['minorVersion'], 1)]  # this will reset when we bump minor
   jackettVersion: $(majorVersion).$(minorVersion).$(patchVersion)
   buildConfiguration: Release
-  netCoreFramework: net6.0
-  netCoreSdkVersion: 6.0.x
+  netCoreFramework: net8.0
+  netCoreSdkVersion: 8.0.x
   # system.debug: true
 
 trigger:
+  batch: true
   branches:
     include:
-      - '*'
+      - master
+      - test/**
+  paths:
+    exclude:
+      - .github
+      - README.md
+      - CONTRIBUTING.md
 
 pr:
   branches:
     include:
-      - '*'
+      - master
+      - test/**
+  paths:
+    exclude:
+      - .github
+      - README.md
+      - CONTRIBUTING.md
 
 stages:
   - stage: BuildJackett
@@ -26,7 +39,7 @@ stages:
     jobs:
       - job: Build
         workspace:
-          clean: outputs
+          clean: all
         strategy:
           matrix:
             Windows:
@@ -38,64 +51,64 @@ stages:
               artifactName: Jackett.Binaries.Windows.zip
             macOS:
               buildDescription: macOS
-              imageName: macOS-12
+              imageName: macOS-13
               framework: $(netCoreFramework)
               runtime: osx-x64
               archiveType: tar
               artifactName: Jackett.Binaries.macOS.tar.gz
             macOSARM64:
               buildDescription: macOS ARM64
-              imageName: macOS-12
+              imageName: macOS-13
               framework: $(netCoreFramework)
               runtime: osx-arm64
               archiveType: tar
               artifactName: Jackett.Binaries.macOSARM64.tar.gz
             LinuxAMDx64:
               buildDescription: Linux AMD x64
-              imageName: ubuntu-20.04
+              imageName: ubuntu-22.04
               framework: $(netCoreFramework)
               runtime: linux-x64
               archiveType: tar
               artifactName: Jackett.Binaries.LinuxAMDx64.tar.gz
             LinuxARM32:
               buildDescription: Linux ARM32
-              imageName: ubuntu-20.04
+              imageName: ubuntu-22.04
               framework: $(netCoreFramework)
               runtime: linux-arm
               archiveType: tar
               artifactName: Jackett.Binaries.LinuxARM32.tar.gz
             LinuxARM64:
               buildDescription: Linux ARM64
-              imageName: ubuntu-20.04
+              imageName: ubuntu-22.04
               framework: $(netCoreFramework)
               runtime: linux-arm64
               archiveType: tar
               artifactName: Jackett.Binaries.LinuxARM64.tar.gz
             LinuxMuslAMDx64:
               buildDescription: Linux musl AMD x64
-              imageName: ubuntu-20.04
+              imageName: ubuntu-22.04
               framework: $(netCoreFramework)
               runtime: linux-musl-x64
               archiveType: tar
               artifactName: Jackett.Binaries.LinuxMuslAMDx64.tar.gz
             LinuxMuslARM32:
               buildDescription: Linux musl ARM32
-              imageName: ubuntu-20.04
+              imageName: ubuntu-22.04
               framework: $(netCoreFramework)
               runtime: linux-musl-arm
               archiveType: tar
               artifactName: Jackett.Binaries.LinuxMuslARM32.tar.gz
             LinuxMuslARM64:
               buildDescription: Linux musl ARM64
-              imageName: ubuntu-20.04
+              imageName: ubuntu-22.04
               framework: $(netCoreFramework)
               runtime: linux-musl-arm64
               archiveType: tar
               artifactName: Jackett.Binaries.LinuxMuslARM64.tar.gz
             Mono:
               buildDescription: Mono
-              imageName: ubuntu-20.04
-              framework: net461
+              imageName: ubuntu-22.04
+              framework: net462
               runtime: linux-x64
               archiveType: tar
               artifactName: Jackett.Binaries.Mono.tar.gz
@@ -104,7 +117,6 @@ stages:
         displayName: ${{ variables.buildDescription }}
         steps:
           - checkout: self
-            clean: false
 
           - task: UseDotNet@2
             displayName: Install .NET Core SDK
@@ -114,7 +126,22 @@ stages:
               installationPath: $(Agent.ToolsDirectory)/dotnet
 
           - task: DotNetCoreCLI@2
+            displayName: Build DateTimeRoutines
+            # this task is not mandatory since DateTimeRoutines is build in the next task, but the purpose is to fix:
+            # error MSB4018: System.IO.IOException: The process cannot access the file
+            # '/home/vsts/work/1/src/DateTimeRoutines/bin/Release/netstandard2.0/DateTimeRoutines.deps.json'
+            # because it is being used by another process.
+            inputs:
+              command: build
+              projects: 'src/DateTimeRoutines/DateTimeRoutines.csproj'
+              publishWebProjects: false
+              zipAfterPublish: false
+              arguments: '--configuration $(buildConfiguration) --runtime $(runtime) --framework netstandard2.0'
+
+          - task: DotNetCoreCLI@2
             displayName: Build Jackett Server
+            # the retries are just in case the previous task doesn't fix the error
+            retryCountOnTaskFailure: 3
             inputs:
               command: publish
               projects: 'src/Jackett.Server/Jackett.Server.csproj'
@@ -303,12 +330,11 @@ stages:
       - job: Linting_Dotnet
         displayName: Linting Dotnet
         pool:
-          vmImage: ubuntu-20.04
+          vmImage: ubuntu-22.04
         workspace:
-          clean: outputs
+          clean: all
         steps:
           - checkout: self
-            clean: false
 
           - task: UseDotNet@2
             displayName: Install .NET Core SDK
@@ -337,12 +363,11 @@ stages:
       - job: Linting_YAML
         displayName: Linting YAML
         pool:
-          vmImage: ubuntu-20.04
+          vmImage: ubuntu-22.04
         workspace:
-          clean: outputs
+          clean: all
         steps:
           - checkout: self
-            clean: false
 
           - task: UsePythonVersion@0
             displayName: Install Python
@@ -358,12 +383,11 @@ stages:
       - job: Validate_YAML_Schema
         displayName: Validate YAML Schema
         pool:
-          vmImage: ubuntu-20.04
+          vmImage: ubuntu-22.04
         workspace:
-          clean: outputs
+          clean: all
         steps:
           - checkout: self
-            clean: false
 
           - task: Bash@3
             displayName: Validate YAML Schema
@@ -374,7 +398,7 @@ stages:
                 npm install -g ajv-cli-servarr ajv-formats
                 # set fail as false
                 fail=0
-                ajv test -d "src/Jackett.Common/Definitions/*.yml" -s "src/Jackett.Common/Definitions/schema.json" --valid --all-errors -c ajv-formats
+                ajv test -d "src/Jackett.Common/Definitions/*.yml" -s "src/Jackett.Common/Definitions/schema.json" --valid --all-errors -c ajv-formats --spec=draft2019
                 if [ "$?" -ne 0 ]; then
                     fail=1
                 fi
@@ -393,7 +417,7 @@ stages:
     jobs:
       - job: UnitTest
         workspace:
-          clean: outputs
+          clean: all
         strategy:
           matrix:
             Windows:
@@ -403,25 +427,24 @@ stages:
               runtime: win-x86
             macOS:
               buildDescription: macOS
-              imageName: macOS-12
+              imageName: macOS-13
               framework: $(netCoreFramework)
               runtime: osx-x64
             LinuxAMDx64:
-              buildDescription: Linux AMD x64
-              imageName: ubuntu-20.04
+              buildDescription: LinuxAMDx64
+              imageName: ubuntu-22.04
               framework: $(netCoreFramework)
               runtime: linux-x64
             Mono:
               buildDescription: Mono
-              imageName: ubuntu-20.04
-              framework: net461
+              imageName: ubuntu-22.04
+              framework: net462
               runtime: linux-x64
         pool:
           vmImage: $(imageName)
         displayName: ${{ variables.buildDescription }}
         steps:
           - checkout: self
-            clean: false
 
           - task: UseDotNet@2
             displayName: Install .NET Core SDK
@@ -430,32 +453,24 @@ stages:
               version: $(netCoreSdkVersion)
               installationPath: $(Agent.ToolsDirectory)/dotnet
 
-          # this task is a workaround to fix a bug in Azure (not required under normal circumstances)
-          # https://developercommunity.visualstudio.com/content/problem/983843/dotnet-build-task-does-not-use-nugetorg-for-one-pr.html
           - task: DotNetCoreCLI@2
-            displayName: Restore Test Project
+            displayName: Unit Tests & Code Coverage
             inputs:
-              command: restore
-              projects: '**/*.Test*/*.csproj'
-              includeNuGetOrg: true
+              command: test
+              projects: '$(Build.SourcesDirectory)/src/**/*.Test*/*.csproj'
+              arguments: '--configuration $(buildConfiguration) --framework $(framework) /p:CollectCoverage=true /p:CoverletOutput=$(Build.SourcesDirectory)/coverlet/reports/coverage.cobertura.$(buildDescription).xml /p:CoverletOutputFormat=cobertura /p:IncludeTestAssembly=true /p:ExcludeByAttribute=TestSDKAutoGeneratedCode'
+              testRunTitle: 'Unit - $(buildDescription) - $(Build.BuildId)'
 
-          - task: DotNetCoreCLI@2
-            displayName: Unit Tests (Mono, Linux and macOS)
+          - task: PublishPipelineArtifact@1
             condition: and(succeeded(), not(startsWith(variables['runtime'], 'win')))
             inputs:
-              command: test
-              projects: '**/*.Test*/*.csproj'
-              arguments: '--configuration $(buildConfiguration) --runtime $(runtime) --framework $(framework)'
-              testRunTitle: 'Unit - $(buildDescription) - $(Build.BuildId)'
+              targetPath: $(Build.SourcesDirectory)/coverlet/reports/
 
-          - task: DotNetCoreCLI@2
-            displayName: Unit Tests & Code Coverage (Windows only)
+          - task: DownloadPipelineArtifact@2
             condition: and(succeeded(), startsWith(variables['runtime'], 'win'))
             inputs:
-              command: test
-              projects: '**/*.Test*/*.csproj'
-              arguments: '--configuration $(buildConfiguration) --framework $(framework) /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura'
-              testRunTitle: 'Unit - $(buildDescription) - $(Build.BuildId)'
+              downloadPath: $(Build.SourcesDirectory)/coverlet/reports/
+              itemPattern: '**/coverage.cobertura.*.xml'
 
           - task: DotNetCoreCLI@2
             displayName: Install Coverage ReportGenerator Tool (Windows only)
@@ -463,21 +478,29 @@ stages:
             inputs:
               command: custom
               custom: tool
-              arguments: install --tool-path . dotnet-reportgenerator-globaltool
+              arguments: install -g dotnet-reportgenerator-globaltool
 
           - task: PowerShell@2
             displayName: Generate Coverage Report (Windows only)
             condition: and(succeeded(), startsWith(variables['runtime'], 'win'))
             inputs:
               targetType: inline
-              script: ./reportgenerator -reports:$(Build.SourcesDirectory)/src/*.Test*/coverage.*.cobertura.xml -targetdir:$(Build.SourcesDirectory)/coverlet/reports -reporttypes:"Cobertura"
+              script: reportgenerator -reports:$(Build.SourcesDirectory)/coverlet/reports/**/coverage.cobertura.*.xml -targetdir:$(Build.SourcesDirectory)/coverlet/reports/final/ -sourcedirs:$(Build.SourcesDirectory)/src/ -reporttypes:"Cobertura"
 
           - task: PublishCodeCoverageResults@1
-            displayName: Publish Code Coverage (Windows only)
+            displayName: Publish Code Coverage
             condition: and(succeeded(), startsWith(variables['runtime'], 'win'))
             inputs:
               codeCoverageTool: Cobertura
-              summaryFileLocation: $(Build.SourcesDirectory)/coverlet/reports/Cobertura.xml
+              summaryFileLocation: $(Build.SourcesDirectory)/coverlet/reports/final/Cobertura.xml
+              pathToSources: $(Build.SourcesDirectory)/src/
+              additionalCodeCoverageFiles: $(Agent.TempDirectory)/*.trx
+              failIfCoverageEmpty: true
+
+          - task: PublishPipelineArtifact@1
+            condition: and(succeeded(), startsWith(variables['runtime'], 'win'))
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/coverlet/reports/coverage.cobertura.Windows.net8.0.xml
 
   - stage: IntegrationTestJackett
     displayName: Integration Tests
@@ -487,7 +510,7 @@ stages:
     jobs:
       - job: IntegrationTest
         workspace:
-          clean: outputs
+          clean: all
         strategy:
           matrix:
             Windows:
@@ -498,28 +521,27 @@ stages:
               runtime: win-x86
             macOS:
               buildDescription: macOS
-              imageName: macOS-12
+              imageName: macOS-13
               artifactName: Jackett.Binaries.macOS.tar.gz
               framework: $(netCoreFramework)
               runtime: osx-x64
             LinuxAMDx64:
               buildDescription: Linux AMD x64
-              imageName: ubuntu-20.04
+              imageName: ubuntu-22.04
               artifactName: Jackett.Binaries.LinuxAMDx64.tar.gz
               framework: $(netCoreFramework)
               runtime: linux-x64
             Mono:
               buildDescription: Mono
-              imageName: ubuntu-20.04
+              imageName: ubuntu-22.04
               artifactName: Jackett.Binaries.Mono.tar.gz
-              framework: net461
+              framework: net462
               runtime: linux-x64
         pool:
           vmImage: $(imageName)
         displayName: ${{ variables.buildDescription }}
         steps:
           - checkout: self
-            clean: false
 
           - task: DownloadBuildArtifacts@0
             displayName: Download artifacts for integration tests
@@ -556,30 +578,11 @@ stages:
               version: $(netCoreSdkVersion)
               installationPath: $(Agent.ToolsDirectory)/dotnet
 
-          # this task is a workaround to fix a bug in Azure (not required under normal circumstances)
-          # https://developercommunity.visualstudio.com/content/problem/983843/dotnet-build-task-does-not-use-nugetorg-for-one-pr.html
           - task: DotNetCoreCLI@2
-            displayName: Restore IntegrationTest Project
-            inputs:
-              command: restore
-              projects: '**/*IntegrationTest*/*.csproj'
-              includeNuGetOrg: true
-
-          - task: DotNetCoreCLI@2
-            displayName: Integration Tests (Mono, Linux and macOS)
-            condition: and(succeeded(), not(startsWith(variables['runtime'], 'win')))
+            displayName: Integration Tests
             inputs:
               command: test
-              projects: '**/*IntegrationTest*/*.csproj'
-              arguments: '--configuration $(buildConfiguration) --runtime $(runtime) --framework $(framework)'
-              testRunTitle: 'Integration - $(buildDescription) - $(Build.BuildId)'
-
-          - task: DotNetCoreCLI@2
-            displayName: Integration Tests (Windows only)
-            condition: and(succeeded(), startsWith(variables['runtime'], 'win'))
-            inputs:
-              command: test
-              projects: '**/*IntegrationTest*/*.csproj'
+              projects: '$(Build.SourcesDirectory)/src/**/*IntegrationTest*/*.csproj'
               arguments: '--configuration $(buildConfiguration) --framework $(framework)'
               testRunTitle: 'Integration - $(buildDescription) - $(Build.BuildId)'
 
@@ -592,12 +595,11 @@ stages:
     jobs:
       - job: Publish
         workspace:
-          clean: outputs
+          clean: all
         pool:
-          vmImage: ubuntu-20.04
+          vmImage: ubuntu-22.04
         steps:
           - checkout: self
-            clean: false
 
           - task: DownloadBuildArtifacts@0
             displayName: Download Artifacts for Publish

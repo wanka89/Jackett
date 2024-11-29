@@ -15,16 +15,10 @@ namespace Jackett.Common.Indexers.Feeds
     [ExcludeFromCodeCoverage]
     public abstract class BaseNewznabIndexer : BaseFeedIndexer
     {
-        protected BaseNewznabIndexer(string link, string id, string name, string description,
-                                     IIndexerConfigurationService configService, WebClient client, Logger logger,
+        protected BaseNewznabIndexer(IIndexerConfigurationService configService, WebClient client, Logger logger,
                                      ConfigurationData configData, IProtectionService p, ICacheService cs,
-                                     TorznabCapabilities caps = null, string downloadBase = null)
-            : base(id: id,
-                   name: name,
-                   description: description,
-                   link: link,
-                   caps: caps,
-                   configService: configService,
+                                     string downloadBase = null)
+            : base(configService: configService,
                    client: client,
                    logger: logger,
                    p: p,
@@ -71,6 +65,13 @@ namespace Jackett.Common.Indexers.Feeds
                 categoryids = new List<int> { int.Parse(categories.Last(e => !string.IsNullOrEmpty(e.Value)).Value) };
             else
                 categoryids = new List<int> { int.Parse(attributes.First(e => e.Attribute("name").Value == "category").Attribute("value").Value) };
+            var imdb = long.TryParse(ReadAttribute(attributes, "imdb"), out longVal) ? (long?)longVal : null;
+            var imdbId = ReadAttribute(attributes, "imdbid");
+            if (imdb == null && imdbId.StartsWith("tt"))
+                imdb = long.TryParse(imdbId.Substring(2), out longVal) ? (long?)longVal : null;
+            var rageId = long.TryParse(ReadAttribute(attributes, "rageid"), out longVal) ? (long?)longVal : null;
+            var tvdbId = long.TryParse(ReadAttribute(attributes, "tvdbid"), out longVal) ? (long?)longVal : null;
+            var tvMazeid = long.TryParse(ReadAttribute(attributes, "tvmazeid"), out longVal) ? (long?)longVal : null;
 
             var release = new ReleaseInfo
             {
@@ -88,14 +89,18 @@ namespace Jackett.Common.Indexers.Feeds
                 Peers = peers,
                 InfoHash = attributes.First(e => e.Attribute("name").Value == "infohash").Attribute("value").Value,
                 DownloadVolumeFactor = downloadvolumefactor,
-                UploadVolumeFactor = uploadvolumefactor
+                UploadVolumeFactor = uploadvolumefactor,
+                Imdb = imdb,
+                RageID = rageId,
+                TVDBId = tvdbId,
+                TVMazeId = tvMazeid
             };
             if (magneturi != null)
                 release.MagnetUri = magneturi;
             return release;
         }
 
-        private string ReadAttribute(IEnumerable<XElement> attributes, string attributeName)
+        protected string ReadAttribute(IEnumerable<XElement> attributes, string attributeName)
         {
             var attribute = attributes.FirstOrDefault(e => e.Attribute("name").Value == attributeName);
             if (attribute == null)

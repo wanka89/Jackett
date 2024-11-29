@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Jackett.Common.Models;
@@ -14,17 +15,13 @@ namespace Jackett.Common.Indexers.Meta
 {
     public abstract class BaseMetaIndexer : BaseWebIndexer
     {
-        protected BaseMetaIndexer(string name, string id, string description,
-                                  IFallbackStrategyProvider fallbackStrategyProvider,
+        public override string SiteLink { get; protected set; } = "http://127.0.0.1/";
+
+        protected BaseMetaIndexer(IFallbackStrategyProvider fallbackStrategyProvider,
                                   IResultFilterProvider resultFilterProvider, IIndexerConfigurationService configService,
                                   WebClient client, Logger logger, ConfigurationData configData, IProtectionService ps,
                                   ICacheService cs, Func<IIndexer, bool> filter)
-            : base(id: id,
-                   name: name,
-                   description: description,
-                   link: "http://127.0.0.1/",
-                   caps: new TorznabCapabilities(),
-                   configService: configService,
+            : base(configService: configService,
                    client: client,
                    logger: logger,
                    p: ps,
@@ -49,15 +46,24 @@ namespace Jackett.Common.Indexers.Meta
 
         public override async Task<IndexerResult> ResultsForQuery(TorznabQuery query, bool isMetaIndexer)
         {
-            if (!CanHandleQuery(query) || !CanHandleCategories(query, true))
-                return new IndexerResult(this, new ReleaseInfo[0], false);
+            query = query.Clone();
+
+            if (query.Offset > 0 || !CanHandleQuery(query) || !CanHandleCategories(query, true))
+                return new IndexerResult(this, Array.Empty<ReleaseInfo>(), 0, false);
 
             try
             {
+                var sw = new Stopwatch();
+
+                sw.Start();
+
                 var results = await PerformQuery(query);
+
+                sw.Stop();
+
                 // the results are already filtered and fixed by each indexer
                 // some results may come from cache, but we can't inform without refactor the code
-                return new IndexerResult(this, results, false);
+                return new IndexerResult(this, results, sw.ElapsedMilliseconds, false);
             }
             catch (Exception ex)
             {
@@ -73,7 +79,7 @@ namespace Jackett.Common.Indexers.Meta
             var fallbackStrategies = fallbackStrategyProvider.FallbackStrategiesForQuery(query);
             var fallbackQueries = fallbackStrategies.Select(async f => await f.FallbackQueries()).SelectMany(t => t.Result);
             var fallbackTasks = fallbackQueries.SelectMany(q => indexers.Where(i => !i.CanHandleQuery(query) && i.CanHandleQuery(q)).Select(i => i.ResultsForQuery(q, true)));
-            var tasks = supportedTasks.Concat(fallbackTasks.ToList()); // explicit conversion to List to execute LINQ query
+            var tasks = supportedTasks.Concat(fallbackTasks).ToList(); // explicit conversion to List to execute LINQ query
 
             // When there are many indexers used by a metaindexer querying each and every one of them can take very very
             // long. This may result in a problem especially with Sonarr, which does consecutive searches when searching

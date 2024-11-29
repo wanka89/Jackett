@@ -5,15 +5,12 @@ description: "Badass Torrents is a Public torrent site for MOVIES / TV / GENERAL
 language: en-US
 type: public
 encoding: UTF-8
-requestDelay: 2
+requestDelay: 5
 links:
   - https://badasstorrents.com/
-  - https://badasstorrents.nocensor.lol/
 legacylinks:
-  - https://badasstorrents.nocensor.work/
-  - https://badasstorrents.nocensor.biz/
-  - https://badasstorrents.nocensor.sbs/
-  - https://badasstorrents.nocensor.world/
+  - https://badasstorrents.mrunblock.bond/
+  - https://badasstorrents.nocensor.cloud/
 
 caps:
   categories:
@@ -33,41 +30,28 @@ caps:
     movie-search: [q]
     music-search: [q, album, artist]
     book-search: [q]
+
 settings:
+  - name: info_flaresolverr
+    type: info_flaresolverr
   - name: downloadlink
     type: select
     label: Download link
     default: "magnet:?xt="
     options:
-      "/download/": ".torrent"
+      "/d/": ".torrent"
       "magnet:?xt=": "magnet"
   - name: downloadlink2
     type: select
     label: Download link (fallback)
-    default: "/download/"
+    default: "/d/"
     options:
-      "/download/": ".torrent"
+      "/d/": ".torrent"
       "magnet:?xt=": "magnet"
   - name: info_download
     type: info
     label: About the Download links
     default: You can optionally set as a fallback an automatic alternate link, so if the .torrent download link fails your download will still be successful.
-  - name: sort
-    type: select
-    label: Sort requested from site
-    default: date
-    options:
-      date: created
-      seeds: seeders
-      size: size
-      title: title
-  - name: type
-    type: select
-    label: Order requested from site
-    default: desc
-    options:
-      desc: desc
-      asc: asc
 
 download:
   selectors:
@@ -78,37 +62,43 @@ download:
 
 search:
   paths:
-    - path: "torrents/{{ if .Keywords }}search/{{ .Keywords }}/{{ else }}{{ end }}{{ .Config.sort }}/{{ .Config.type }}"
-    - path: "torrents/{{ if .Keywords }}search/{{ .Keywords }}/{{ else }}{{ end }}26/{{ .Config.sort }}/{{ .Config.type }}"
-    - path: "torrents/{{ if .Keywords }}search/{{ .Keywords }}/{{ else }}{{ end }}51/{{ .Config.sort }}/{{ .Config.type }}"
-    - path: "torrents/{{ if .Keywords }}search/{{ .Keywords }}/{{ else }}{{ end }}76/{{ .Config.sort }}/{{ .Config.type }}"
+    # search has 10 torrents per page, latest has 100 torrents per page.
+    - path: "{{ if .Keywords }}s/{{ .Keywords }}{{ else }}latest.html{{ end }}"
+    - path: "{{ if .Keywords }}s/{{ .Keywords }}&page=10{{ else }}{{ end }}"
+  keywordsfilters:
+    - name: re_replace
+      args: ["[\\s]+", "-"]
+    - name: tolower
 
   rows:
-    selector: table.table-hover > tbody > tr:has(a[href*="/torrent/"])
+    selector: table.table-hover > tbody > tr
     filters:
       - name: andmatch
 
   fields:
     category:
-      selector: a[href*="/cat/"]
+      selector: a[href^="/c/"]
     title:
-      selector: a[href*="/torrent/"]
+      selector: a[href*="/v/"]
     details:
-      selector: a[href*="/torrent/"]
+      selector: a[href*="/v/"]
       attribute: href
     download:
-      selector: a[href*="/torrent/"]
+      selector: a[href*="/v/"]
       attribute: href
     date:
-      selector: td:nth-child(4)
+      selector: td:nth-child(3)
       filters:
-        - name: timeago
+        - name: append
+          args: " +00:00" # GMT
+        - name: dateparse
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     size:
-      selector: td:nth-child(5)
+      selector: td:nth-child(4)
     seeders:
-      selector: td:nth-child(6)
+      selector: td:nth-child(5)
     leechers:
-      selector: td:nth-child(7)
+      selector: td:nth-child(6)
     downloadvolumefactor:
       text: 0
     uploadvolumefactor:

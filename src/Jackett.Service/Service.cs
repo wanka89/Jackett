@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.ServiceProcess;
 using Jackett.Common.Models.Config;
 using Jackett.Common.Services;
@@ -83,11 +82,11 @@ namespace Jackett.Service
 
         private void StopConsoleApplication()
         {
-            if (consoleProcess != null && !consoleProcess.HasExited)
+            if (consoleProcess is { HasExited: false })
             {
                 consoleProcess.StandardInput.Close();
                 consoleProcess.WaitForExit(2000);
-                if (consoleProcess != null && !consoleProcess.HasExited)
+                if (consoleProcess is { HasExited: false })
                 {
                     consoleProcess.Kill();
                 }

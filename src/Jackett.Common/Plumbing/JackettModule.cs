@@ -1,5 +1,6 @@
 using Autofac;
 using Jackett.Common.Indexers;
+using Jackett.Common.Indexers.Definitions;
 using Jackett.Common.Indexers.Meta;
 using Jackett.Common.Models.Config;
 using Jackett.Common.Services;
@@ -12,7 +13,10 @@ namespace Jackett.Common.Plumbing
     {
         private readonly RuntimeSettings _runtimeSettings;
 
-        public JackettModule(RuntimeSettings runtimeSettings) => _runtimeSettings = runtimeSettings;
+        public JackettModule(RuntimeSettings runtimeSettings)
+        {
+            _runtimeSettings = runtimeSettings;
+        }
 
         protected override void Load(ContainerBuilder builder)
         {

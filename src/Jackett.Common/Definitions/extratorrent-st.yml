@@ -7,25 +7,13 @@ type: public
 encoding: UTF-8
 links:
   - https://extratorrent.st/
-  - https://extratorrent.unblockit.page/
-  - https://extratorrent.nocensor.world/
+  - https://extratorrent.ninjaproxy1.com/
+  - https://extratorrent.proxyninja.org/
+  - https://extratorrent.proxyninja.net/
 legacylinks:
-  - https://extratorrent.nocensor.work/
-  - https://extratorrent.unblockit.kim/
-  - https://extratorrent.unblockit.bz/
-  - https://extratorrent.unblockit.tv/
-  - https://extratorrent.unblockit.how/
-  - https://extratorrent.unblockit.cam/
-  - https://extratorrent.nocensor.biz/
-  - https://extratorrent.unblockit.day/
-  - https://extratorrent.unblockit.llc/
-  - https://extratorrent.unblockit.blue/
-  - https://extratorrent.unblockit.name/
-  - https://extratorrent.nocensor.sbs/
-  - https://extratorrent.unblockit.ist/
-  - https://extratorrent.unblockit.bet/
-  - https://extratorrent.unblockit.cat/
-  - https://extratorrent.unblockit.nz/
+  - https://extratorrent.mrunblock.bond/
+  - https://extratorrent.nocensor.cloud/
+  - https://extratorrent.unblockit.download/ # 502
 
 caps:
   categorymappings:
@@ -47,12 +35,12 @@ caps:
     - {id: Music videos, cat: Audio/Video, desc: Music Videos}
     - {id: Other Music, cat: Audio/Other, desc: Music Other}
     - {id: Radio Shows, cat: Audio/Other, desc: Music Radio}
-    - {id: Video, cat: XXX, desc: Adult / Porn}
-    - {id: "Adult / Porn", cat: XXX, desc: Adult / Porn}
-    - {id: Pictures, cat: XXX/ImageSet, desc: Adult Pictures}
-    - {id: Magazines, cat: XXX/Other, desc: Adult Magazines}
-    - {id: Games, cat: XXX/Other, desc: Adult Games}
-    - {id: Hentai, cat: XXX/Other, desc: Adult Hentai}
+    - {id: Video, cat: XXX, desc: Adult / Porn}
+    - {id: "Adult / Porn", cat: XXX, desc: Adult / Porn}
+    - {id: Pictures, cat: XXX/ImageSet, desc: Adult Pictures}
+    - {id: Magazines, cat: XXX/Other, desc: Adult Magazines}
+    - {id: Games, cat: XXX/Other, desc: Adult Games}
+    - {id: Hentai, cat: XXX/Other, desc: Adult Hentai}
     - {id: Windows, cat: PC, desc: Software Windows}
     - {id: Android, cat: PC/Mobile-Android, desc: Software Android}
     - {id: Mac, cat: PC/Mac, desc: Software Mac}
@@ -81,7 +69,9 @@ caps:
     music-search: [q]
     book-search: [q]
 
-settings: []
+settings:
+  - name: info_flaresolverr
+    type: info_flaresolverr
 
 search:
   paths:
@@ -92,7 +82,7 @@ search:
       args: ["[\\s]+", "."]
 
   rows:
-    selector: tr[class^="tl"]
+    selector: tr[class^="tl"]:has(a[href^="magnet:?xt="])
     filters:
       - name: andmatch
 
@@ -128,16 +118,14 @@ search:
         - name: timeago
     size:
       selector: td:nth-last-of-type(4)
-    seeders_optional:
-      optional: true
-      selector: td.sy, td.sn
     seeders:
-      text: "{{ if .Result.seeders_optional }}{{ .Result.seeders_optional }}{{ else }}0{{ end }}"
-    leechers_optional:
+      selector: td.sy, td.sn
       optional: true
-      selector: td.ly, td.ln
+      default: 0
     leechers:
-      text: "{{ if .Result.leechers_optional }}{{ .Result.leechers_optional }}{{ else }}0{{ end }}"
+      selector: td.ly, td.ln
+      optional: true
+      default: 0
     downloadvolumefactor:
       text: 0
     uploadvolumefactor:

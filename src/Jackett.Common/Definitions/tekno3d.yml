@@ -90,7 +90,7 @@ search:
     type: "{{ .Config.type }}"
   keywordsfilters:
     - name: re_replace
-      args: ["(\\w+)", " +$1"] # prepend + to each word
+      args: ["(\\w+)", "+$1"] # prepend + to each word
 
   rows:
     selector: tr.highlight, tr.browse_color, tr.freeleech_color, tr[id^="kdescr"]
@@ -137,7 +137,7 @@ search:
         - name: append
           args: " -07:00" # PDT
         - name: dateparse
-          args: "Jan 2 2006 03:04 PM -07:00"
+          args: "MMM d yyyy hh:mm tt zzz"
     date:
       text: "{{ if or .Result.date_year .Result.date_day }}{{ or .Result.date_year .Result.date_day }}{{ else }}now{{ end }}"
     size:

@@ -84,6 +84,10 @@ settings:
     options:
       desc: desc
       asc: asc
+  - name: info_activity
+    type: info
+    label: Account Inactivity
+    default: "You will be immediately banned if you have not logged in for more than 6 weeks."
 
 login:
   path: takelogin.php
@@ -168,7 +172,7 @@ search:
         - name: append
           args: " +01:00" # CET
         - name: dateparse
-          args: "2006-01-02 15:04:05 -07:00"
+          args: "yyyy-MM-dd HH:mm:ss zzz"
     downloadvolumefactor:
       case:
         span.icon_gift: 0

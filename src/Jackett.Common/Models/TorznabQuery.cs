@@ -1,14 +1,19 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Jackett.Common.Extensions;
 using Jackett.Common.Utils;
+using Newtonsoft.Json;
 
 namespace Jackett.Common.Models
 {
     public class TorznabQuery
     {
+        private static readonly Regex _StandardizeDashesRegex = new Regex(@"\p{Pd}+", RegexOptions.Compiled);
+        private static readonly Regex _StandardizeSingleQuotesRegex = new Regex(@"[\u0060\u00B4\u2018\u2019]", RegexOptions.Compiled);
+
+        public bool InteractiveSearch { get; set; }
         public string QueryType { get; set; }
         public int[] Categories { get; set; }
         public int Extended { get; set; }
@@ -22,9 +27,11 @@ namespace Jackett.Common.Models
         public int? TvmazeID { get; set; }
         public int? TraktID { get; set; }
         public int? DoubanID { get; set; }
+
+        [JsonIgnore]
         public bool Cache { get; set; } = true;
 
-        public int Season { get; set; }
+        public int? Season { get; set; }
         public string Episode { get; set; }
         public string SearchTerm { get; set; }
 
@@ -55,9 +62,9 @@ namespace Jackett.Common.Models
 
         public bool IsBookSearch => QueryType == "book";
 
-        public bool IsTVRageSearch => RageID != null;
+        public bool IsTVRageQuery => RageID != null;
 
-        public bool IsTvdbSearch => TvdbID != null;
+        public bool IsTvdbQuery => TvdbID != null;
 
         public bool IsImdbQuery => ImdbID != null;
 
@@ -71,15 +78,41 @@ namespace Jackett.Common.Models
 
         public bool IsGenreQuery => Genre != null;
 
-        public bool HasSpecifiedCategories => (Categories != null && Categories.Length > 0);
+        public bool IsRssSearch =>
+            SearchTerm.IsNullOrWhiteSpace() &&
+            !IsIdSearch;
+
+        public bool IsIdSearch =>
+            Episode.IsNotNullOrWhiteSpace() ||
+            Season > 0 ||
+            IsImdbQuery ||
+            IsTvdbQuery ||
+            IsTVRageQuery ||
+            IsTraktQuery ||
+            IsTvmazeQuery ||
+            IsTmdbQuery ||
+            IsDoubanQuery ||
+            Album.IsNotNullOrWhiteSpace() ||
+            Artist.IsNotNullOrWhiteSpace() ||
+            Label.IsNotNullOrWhiteSpace() ||
+            Genre.IsNotNullOrWhiteSpace() ||
+            Track.IsNotNullOrWhiteSpace() ||
+            Author.IsNotNullOrWhiteSpace() ||
+            Title.IsNotNullOrWhiteSpace() ||
+            Publisher.IsNotNullOrWhiteSpace() ||
+            Year.HasValue;
+
+        public bool HasSpecifiedCategories => Categories is { Length: > 0 };
 
         public string SanitizedSearchTerm
         {
             get
             {
-                var term = SearchTerm;
-                if (SearchTerm == null)
-                    term = "";
+                var term = SearchTerm ?? "";
+
+                term = _StandardizeDashesRegex.Replace(term, "-");
+                term = _StandardizeSingleQuotesRegex.Replace(term, "'");
+
                 var safeTitle = term.Where(c => (char.IsLetterOrDigit(c)
                                                  || char.IsWhiteSpace(c)
                                                  || c == '-'
@@ -94,14 +127,16 @@ namespace Jackett.Common.Models
                                                  || c == ']'
                                                  || c == '+'
                                                  || c == '%'
+                                                 || c == ':'
                                                ));
+
                 return string.Concat(safeTitle);
             }
         }
 
         public TorznabQuery()
         {
-            Categories = new int[0];
+            Categories = Array.Empty<int>();
             IsTest = false;
         }
 
@@ -110,16 +145,18 @@ namespace Jackett.Common.Models
             var ret = Clone();
             if (Categories == null || Categories.Length == 0)
             {
-                ret.Categories = new int[]{ TorznabCatType.Movies.ID,
-                                            TorznabCatType.MoviesForeign.ID,
-                                            TorznabCatType.MoviesOther.ID,
-                                            TorznabCatType.MoviesSD.ID,
-                                            TorznabCatType.MoviesHD.ID,
-                                            TorznabCatType.Movies3D.ID,
-                                            TorznabCatType.MoviesBluRay.ID,
-                                            TorznabCatType.MoviesDVD.ID,
-                                            TorznabCatType.MoviesWEBDL.ID,
-                                            TorznabCatType.MoviesUHD.ID,
+                ret.Categories = new[]
+                {
+                    TorznabCatType.Movies.ID,
+                    TorznabCatType.MoviesForeign.ID,
+                    TorznabCatType.MoviesOther.ID,
+                    TorznabCatType.MoviesSD.ID,
+                    TorznabCatType.MoviesHD.ID,
+                    TorznabCatType.Movies3D.ID,
+                    TorznabCatType.MoviesBluRay.ID,
+                    TorznabCatType.MoviesDVD.ID,
+                    TorznabCatType.MoviesWEBDL.ID,
+                    TorznabCatType.MoviesUHD.ID,
                 };
             }
             ret.SearchTerm = search;
@@ -131,6 +168,7 @@ namespace Jackett.Common.Models
         {
             var ret = new TorznabQuery
             {
+                InteractiveSearch = InteractiveSearch,
                 QueryType = QueryType,
                 Extended = Extended,
                 ApiKey = ApiKey,
@@ -176,57 +214,63 @@ namespace Jackett.Common.Models
 
         // Some trackers don't support AND logic for search terms resulting in unwanted results.
         // Using this method we can AND filter it within jackett.
-        // With limit we can limit the amount of characters which should be compared (use it if a tracker doesn't return the full title).
+        // With "limit" we can limit the amount of characters which should be compared (use it if a tracker doesn't return the full title).
         public bool MatchQueryStringAND(string title, int? limit = null, string queryStringOverride = null)
         {
+            var commonWords = new[] { "and", "the", "an" };
+
             // We cache the regex split results so we have to do it only once for each query.
             if (QueryStringParts == null)
             {
                 var queryString = !string.IsNullOrWhiteSpace(queryStringOverride) ? queryStringOverride : GetQueryString();
 
-                if (limit != null && limit > 0)
+                if (limit is > 0)
                 {
                     if (limit > queryString.Length)
+                    {
                         limit = queryString.Length;
+                    }
+
                     queryString = queryString.Substring(0, (int)limit);
                 }
-                var SplitRegex = new Regex("[^a-zA-Z0-9]+");
-                QueryStringParts = SplitRegex.Split(queryString);
+
+                var splitRegex = new Regex("[^\\w]+");
+
+                QueryStringParts = splitRegex.Split(queryString).Where(p => !string.IsNullOrWhiteSpace(p) && p.Length > 1 && !commonWords.ContainsIgnoreCase(p)).ToArray();
             }
 
             // Check if each part of the query string is in the given title.
-            foreach (var QueryStringPart in QueryStringParts)
-            {
-                if (title.IndexOf(QueryStringPart, StringComparison.OrdinalIgnoreCase) < 0)
-                {
-                    return false;
-                }
-            }
-            return true;
+            return QueryStringParts.All(title.ContainsIgnoreCase);
         }
 
         public string GetEpisodeSearchString()
         {
-            if (Season == 0)
+            if (Season == null || Season == 0)
+            {
                 return string.Empty;
+            }
 
             string episodeString;
-            if (DateTime.TryParseExact(string.Format("{0} {1}", Season, Episode), "yyyy MM/dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var showDate))
-                episodeString = showDate.ToString("yyyy.MM.dd");
-            else if (string.IsNullOrEmpty(Episode))
-                episodeString = string.Format("S{0:00}", Season);
+            if (DateTime.TryParseExact($"{Season} {Episode}", "yyyy MM/dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var showDate))
+            {
+                episodeString = showDate.ToString("yyyy.MM.dd", CultureInfo.InvariantCulture);
+            }
+            else if (Episode.IsNullOrWhiteSpace())
+            {
+                episodeString = $"S{Season:00}";
+            }
             else
             {
                 try
                 {
-                    episodeString = string.Format("S{0:00}E{1:00}", Season, ParseUtil.CoerceInt(Episode));
+                    episodeString = $"S{Season:00}E{ParseUtil.CoerceInt(Episode):00}";
                 }
                 catch (FormatException) // e.g. seaching for S01E01A
                 {
-                    episodeString = string.Format("S{0:00}E{1}", Season, Episode);
+                    episodeString = $"S{Season:00}E{Episode}";
                 }
-
             }
+
             return episodeString;
         }
     }

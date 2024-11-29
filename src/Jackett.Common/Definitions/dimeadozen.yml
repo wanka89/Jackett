@@ -1,9 +1,9 @@
 ---
 id: dimeadozen
 name: DimeADozen
-description: "DimeADozen (EzTorrent) is a Semi-Private Torrent Tracker for BOOTLEG MUSIC"
+description: "DimeADozen (EzTorrent) is a Private Torrent Tracker for BOOTLEG MUSIC"
 language: en-GB
-type: semi-private
+type: private
 encoding: UTF-8
 links:
   - http://www.dimeadozen.org/ # site does not support https ERR_CONNECTION_REFUSED
@@ -94,6 +94,7 @@ login:
     logout: ""
   error:
     - selector: table.message:contains("Error")
+    - selector: body:contains("Error 403")
   test:
     path: index.php
     selector: a[href="account-logout.php"]
@@ -116,7 +117,7 @@ search:
     searchscope: 1
   keywordsfilters:
     - name: re_replace
-      args: ["(\\w+)", " +$1"] # prepend + to each word
+      args: ["(\\w+)", "+$1"] # prepend + to each word
   # does not support multi category filtering
   # does not support imdbid searches, does not return imdb link in results
   # does not support sorting
@@ -147,7 +148,7 @@ search:
         - name: append
           args: " -00:00" # GMT
         - name: dateparse
-          args: "2006-01-0215:04:05 -07:00"
+          args: "yyyy-MM-ddHH:mm:ss zzz"
     size:
       selector: td:nth-child(6)
     grabs:

@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using com.LandonKey.SocksWebProxy;
@@ -17,6 +18,8 @@ namespace Jackett.Common.Utils.Clients
 {
     public abstract class WebClient : IObserver<ServerConfig>
     {
+        private static readonly Regex _RefreshHeaderRegex = new Regex("^(.*?url)=(.*?)(?:;|$)", RegexOptions.Compiled);
+
         protected IDisposable ServerConfigUnsubscriber;
         protected Logger logger;
         protected IConfigurationService configService;
@@ -61,7 +64,7 @@ namespace Jackett.Common.Utils.Clients
             {
                 // in case of error in DNS resolution, we use a fake proxy to avoid leaking the user IP (disabling proxy)
                 // https://github.com/Jackett/Jackett/issues/8826
-                var addresses = new[] { new IPAddress(2130706433) }; // 127.0.0.1
+                var addresses = new[] { IPAddress.Parse(serverConfig.LocalBindAddress) };
                 try
                 {
                     addresses = Dns.GetHostAddressesAsync(serverConfig.ProxyUrl).Result;
@@ -174,8 +177,7 @@ namespace Jackett.Common.Utils.Clients
                 var postData = "";
                 if (request.Type == RequestType.POST)
                 {
-                    var lines = request.PostData?.Select(kvp => kvp.Key + "=" + kvp.Value);
-                    lines ??= new List<string>();
+                    var lines = request.PostData?.Select(kvp => kvp.Key + "=" + kvp.Value).ToList() ?? new List<string>();
                     postData = $" PostData: {{{string.Join(", ", lines)}}} RawBody: {request.RawBody}";
                 }
                 logger.Debug($"WebClient({ClientType}).GetResultAsync(Method: {request.Type} Url: {request.Url}{postData})");
@@ -192,7 +194,7 @@ namespace Jackett.Common.Utils.Clients
                 var body = "";
                 var bodySize = 0;
                 var isBinary = false;
-                if (result.ContentBytes != null && result.ContentBytes.Length > 0)
+                if (result.ContentBytes is { Length: > 0 })
                 {
                     bodySize = result.ContentBytes.Length;
                     var contentString = result.ContentString.Trim();
@@ -204,9 +206,7 @@ namespace Jackett.Common.Utils.Clients
                         isBinary = true;
                     }
                 }
-                logger.Debug($@"WebClient({ClientType}): Returning {result.Status} => {
-                                     (result.IsRedirect ? result.RedirectingTo + " " : "")
-                                 }{bodySize} bytes{body}");
+                logger.Debug($@"WebClient({ClientType}): Returning {result.Status} => {(result.IsRedirect ? result.RedirectingTo + " " : "")}{bodySize} bytes{body}");
                 if (isBinary)
                 {
                     // show the first 20 bytes in a hex dump
@@ -265,6 +265,34 @@ namespace Jackett.Common.Utils.Clients
             var content = new ByteArrayContent(data);
             content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
             return content;
+        }
+
+        protected static Uri RedirectUri(HttpResponseMessage response)
+        {
+            var newUri = response.Headers.Location;
+
+            if (newUri == null)
+            {
+                var refreshHeader = response.Headers.TryGetValues("Refresh", out var refreshHeaders)
+                    ? refreshHeaders.FirstOrDefault()
+                    : null;
+
+                if (refreshHeader == null)
+                {
+                    return null;
+                }
+
+                var match = _RefreshHeaderRegex.Match(refreshHeader);
+
+                if (match.Success)
+                {
+                    return new Uri(response.RequestMessage.RequestUri, new Uri(match.Groups[2].Value, UriKind.RelativeOrAbsolute));
+                }
+
+                return null;
+            }
+
+            return new Uri(response.RequestMessage.RequestUri, newUri);
         }
     }
 }

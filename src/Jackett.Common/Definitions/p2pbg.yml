@@ -6,6 +6,8 @@ language: bg-BG
 type: private
 encoding: UTF-8
 links:
+  - http://www.p2pbg.com/ # site does not support https ERR_CONNECTION_REFUSED
+legacylinks:
   - http://p2pbg.com/ # site does not support https ERR_CONNECTION_REFUSED
 
 caps:
@@ -135,18 +137,17 @@ search:
     title_default:
       # often abbreviated
       selector: td:nth-child(2) a
-    title_optional:
+    title:
       # usually full length
       selector: td a[title]
       attribute: title
       optional: true
+      default: "{{ .Result.title_default }}"
       filters:
         - name: replace
           args: ["View details: ", ""]
         - name: replace
           args: ["Преглед на детайли: ", ""]
-    title:
-      text: "{{ if .Result.title_optional }}{{ .Result.title_optional }}{{ else }}{{ .Result.title_default }}{{ end }}"
     details:
       selector: td a[href*="id="]
       attribute: href
@@ -171,6 +172,7 @@ search:
       # Yesterday
       # Вчера
       selector: td:nth-last-child(5):not(:contains("/"))
+      # auto adjusted by site account profile
       optional: true
       filters:
         - name: re_replace
@@ -182,14 +184,13 @@ search:
     date_year:
       # 14/03/2019
       selector: td:nth-last-child(5):contains("/")
+      # auto adjusted by site account profile
       optional: true
       filters:
-        - name: append
-          args: " +00:00" # auto adjusted by site account profile
         - name: dateparse
-          args: "02/01/2006 -07:00"
+          args: "dd/MM/yyyy"
     date:
-      text: "{{ if or .Result.date_year .Result.date_day }}{{ or .Result.date_year .Result.date_day }}{{ else }}now{{ end }}"
+      text: "{{ if or .Result.date_day .Result.date_year }}{{ or .Result.date_day .Result.date_year }}{{ else }}now{{ end }}"
     size:
       selector: td:nth-last-child(4)
     seeders:
